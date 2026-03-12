@@ -1,1 +1,229 @@
+import os
+import json
+import base64
+import logging
+import subprocess
+import tempfile
+from pathlib import Path
+from typing import Any
 
+import exiftool
+import numpy as np
+import requests
+from PIL import Image, ImageChops
+import io
+
+logger: logging.Logger = logging.getLogger(__name__)
+
+TIPOS_IMAGEM: frozenset[str] = frozenset({
+    ".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif",
+    ".tiff", ".tif", ".gif", ".bmp", ".raw",
+})
+
+TIPOS_VIDEO: frozenset[str] = frozenset({
+    ".mp4", ".mov", ".avi", ".mkv", ".webm", ".flv", ".wmv", ".m4v",
+})
+
+CAMPOS_BINARIOS: frozenset[str] = frozenset({
+    "item 0", "item 1", "item 2", "item 3",
+    "item 1 sig tst 2 tst tokens val",
+    "item 1r vals ocsp vals",
+    "item 1 pad", "item 1 pad 2",
+    "created assertions hash",
+    "hash", "pad",
+})
+
+CAMPOS_IGNORADOS: frozenset[str] = frozenset({"sourcefile", "exiftoolversion"})
+
+ELA_QUALIDADE: int = 90
+ELA_FATOR_AMPLIFICACAO: int = 15
+ELA_VALOR_MAX: int = 255
+
+HIVE_API_URL: str = "https://api.thehive.ai/api/v2/task/sync"
+SERPAPI_URL: str = "https://serpapi.com/search"
+SERPAPI_ENGINE: str = "google_reverse_image"
+SERPAPI_MAX_RESULTADOS: int = 5
+
+C2PA_TIMEOUT_S: int = 15
+
+
+def _detectar_tipo(nome: str) -> str:
+    """Retorna 'imagem' ou 'video' com base na extensao do arquivo."""
+    ext = Path(nome).suffix.lower()
+    if ext in TIPOS_IMAGEM:
+        return "imagem"
+    if ext in TIPOS_VIDEO:
+        return "video"
+    raise ValueError(f"Tipo nao suportado: {ext}")
+
+
+def _normalizar(dados: dict[str, Any]) -> dict[str, Any]:
+    """Remove chaves irrelevantes e campos binarios dos metadados brutos."""
+    resultado: dict[str, Any] = {}
+    for chave, valor in dados.items():
+        chave_clean = chave.split(":")[-1]
+        if chave_clean.lower() in CAMPOS_IGNORADOS:
+            continue
+        if chave_clean.lower() in CAMPOS_BINARIOS:
+            continue
+        if isinstance(valor, str) and "(Binary data" in valor:
+            continue
+        resultado[chave_clean] = valor
+    return resultado
+
+
+def extrair_metadados(conteudo: bytes, nome_arquivo: str) -> dict[str, Any]:
+    """Extrai e normaliza metadados EXIF/XMP de imagem ou video."""
+    tipo = _detectar_tipo(nome_arquivo)
+    suffix = Path(nome_arquivo).suffix
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(conteudo)
+        tmp_path = tmp.name
+
+    meta: dict[str, Any] = {}
+    try:
+        with exiftool.ExifToolHelper() as et:
+            dados_brutos = et.get_metadata(tmp_path)
+            meta = _normalizar(dados_brutos[0]) if dados_brutos else {}
+    except Exception as exc:
+        logger.error("Falha ao extrair metadados com ExifTool: %s", exc)
+    finally:
+        os.unlink(tmp_path)
+
+    meta["_file_name"] = nome_arquivo
+    meta["_file_type"] = tipo
+    meta["_file_size_kb"] = round(len(conteudo) / 1024, 2)
+
+    return meta
+
+
+def ela(conteudo: bytes, sufixo: str) -> str:
+    """Gera imagem ELA em base64 a partir dos bytes da imagem original."""
+    imagem_original = Image.open(io.BytesIO(conteudo)).convert("RGB")
+
+    buffer_recomp = io.BytesIO()
+    imagem_original.save(buffer_recomp, format="JPEG", quality=ELA_QUALIDADE)
+    buffer_recomp.seek(0)
+    imagem_recomprimida = Image.open(buffer_recomp).convert("RGB")
+
+    diferenca = ImageChops.difference(imagem_original, imagem_recomprimida)
+    arr = np.array(diferenca, dtype=np.float32)
+    arr = np.clip(arr * ELA_FATOR_AMPLIFICACAO, 0, ELA_VALOR_MAX).astype(np.uint8)
+
+    imagem_ela = Image.fromarray(arr)
+    buffer_saida = io.BytesIO()
+    imagem_ela.save(buffer_saida, format="PNG")
+
+    return base64.b64encode(buffer_saida.getvalue()).decode()
+
+
+def score_ia(conteudo: bytes) -> dict[str, Any]:
+    """Envia imagem para a Hive API e retorna o dicionario de classes de IA."""
+    api_key = os.environ.get("HIVE_API_KEY", "")
+    headers = {"Authorization": f"Token {api_key}"}
+
+    try:
+        resposta = requests.post(
+            HIVE_API_URL,
+            headers=headers,
+            files={"media": conteudo},
+            timeout=30,
+        )
+        resposta.raise_for_status()
+        dados = resposta.json()
+        outputs = dados.get("status", [{}])[0].get("response", {}).get("output", [])
+        if outputs:
+            classes = outputs[0].get("classes", [])
+            return {item["class"]: item["score"] for item in classes if "class" in item}
+        return {}
+    except Exception as exc:
+        logger.error("Falha ao consultar Hive API: %s", exc)
+        return {}
+
+
+def verificar_c2pa(conteudo: bytes, sufixo: str) -> dict[str, Any]:
+    """Verifica certificado C2PA via c2patool e retorna campos de proveniencia."""
+    resultado_padrao: dict[str, Any] = {
+        "presente": False,
+        "valido": False,
+        "assinante": None,
+        "software": None,
+        "acao": None,
+    }
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=sufixo) as tmp:
+        tmp.write(conteudo)
+        tmp_path = tmp.name
+
+    try:
+        try:
+            proc = subprocess.run(
+                ["c2patool", tmp_path],
+                capture_output=True,
+                text=True,
+                timeout=C2PA_TIMEOUT_S,
+            )
+            if proc.returncode != 0:
+                return resultado_padrao
+
+            dados = json.loads(proc.stdout)
+        except FileNotFoundError:
+            logger.warning("c2patool nao encontrado no PATH")
+            return resultado_padrao
+        except (subprocess.TimeoutExpired, json.JSONDecodeError, Exception) as exc:
+            logger.error("Falha ao executar c2patool: %s", exc)
+            return resultado_padrao
+
+        manifests: dict[str, Any] = dados.get("manifests", {})
+        if not manifests:
+            return resultado_padrao
+
+        primeiro = next(iter(manifests.values()))
+        assinante = primeiro.get("signature_info", {}).get("issuer")
+        software = primeiro.get("claim_generator")
+
+        acao = None
+        for assertion in primeiro.get("assertions", []):
+            if str(assertion.get("label", "")).startswith("c2pa.actions"):
+                acoes_lista = assertion.get("data", {}).get("actions", [])
+                if acoes_lista:
+                    acao = acoes_lista[0].get("action")
+                break
+
+        return {
+            "presente": True,
+            "valido": True,
+            "assinante": assinante,
+            "software": software,
+            "acao": acao,
+        }
+    finally:
+        os.unlink(tmp_path)
+
+
+def reverse_search(conteudo: bytes) -> list[dict[str, Any]]:
+    """Realiza busca reversa de imagem via SerpAPI e retorna ate 5 resultados."""
+    api_key = os.environ.get("SERPAPI_KEY", "")
+
+    try:
+        resposta = requests.post(
+            SERPAPI_URL,
+            data={"engine": SERPAPI_ENGINE, "api_key": api_key},
+            files={"encoded_image": conteudo},
+            timeout=30,
+        )
+        resposta.raise_for_status()
+        dados = resposta.json()
+        resultados_brutos = dados.get("image_results", [])[:SERPAPI_MAX_RESULTADOS]
+        return [
+            {
+                "titulo": item.get("title", ""),
+                "url": item.get("link", ""),
+                "data": item.get("date", ""),
+            }
+            for item in resultados_brutos
+        ]
+    except Exception as exc:
+        logger.error("Falha ao realizar busca reversa via SerpAPI: %s", exc)
+        return []
