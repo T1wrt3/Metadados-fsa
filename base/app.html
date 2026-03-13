@@ -3,31 +3,30 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MetaScan</title>
+  <title>FileSpector</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #080808;
-      --surface: #111;
-      --surface2: #181818;
-      --border: #222;
-      --border2: #2e2e2e;
-      --accent: #d4f53c;
-      --accent2: #3cffd4;
+      --bg: #f1f3f5;
+      --surface: #ffffff;
+      --surface2: #f8f9fa;
+      --border: #dee2e6;
+      --border2: #ced4da;
+      --accent: #0091ff;
+      --accent2: #0071cc;
       --danger: #ff4d4d;
-      --text: #e2e2e2;
-      --muted: #555;
-      --muted2: #888;
+      --warn: #f5a623;
+      --text: #212529;
+      --muted: #899199;
+      --muted2: #5a6169;
       --mono: 'Space Mono', monospace;
       --sans: 'Syne', sans-serif;
       --radius: 8px;
     }
 
-    html, body {
-      height: 100%;
-    }
+    html, body { height: 100%; }
 
     body {
       background: var(--bg);
@@ -55,20 +54,11 @@
       gap: 16px;
     }
 
-    .logo {
-      font-size: 2.2rem;
-      font-weight: 800;
-      letter-spacing: -0.05em;
-      line-height: 1;
-    }
-
+    .logo { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.07em; line-height: 1; }
     .logo span { color: var(--accent); }
 
-    .api-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .header-actions { display: flex; align-items: center; gap: 16px; }
+    .api-row { display: flex; align-items: center; gap: 8px; }
 
     .api-label {
       font-family: var(--mono);
@@ -112,28 +102,17 @@
       background: rgba(212,245,60,0.03);
     }
 
-    .dropzone input {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-    }
+    .dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
     .dz-ring {
-      width: 56px;
-      height: 56px;
+      width: 56px; height: 56px;
       border: 1.5px solid var(--border2);
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       font-size: 1.5rem;
     }
 
-    .dz-title {
-      font-size: 1rem;
-      font-weight: 700;
-    }
+    .dz-title { font-size: 1rem; font-weight: 700; }
 
     .dz-sub {
       font-family: var(--mono);
@@ -165,17 +144,8 @@
     }
 
     .file-bar.on { display: flex; }
-
-    .file-bar .fname {
-      flex: 1;
-      color: var(--accent2);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
+    .file-bar .fname { flex: 1; color: var(--accent2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .file-bar .fsize { color: var(--muted2); }
-
     .file-bar .ftype {
       font-size: 0.6rem;
       border: 1px solid var(--border2);
@@ -196,15 +166,36 @@
     }
 
     .status.on { display: block; }
-
     .status.err { color: var(--danger); }
 
-    .results-panel {
-      display: none;
-      flex-direction: column;
-      gap: 16px;
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border2);
     }
 
+    .tab-btn {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 9px 18px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted2);
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.on { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-pane { display: none; flex-direction: column; gap: 16px; }
+    .tab-pane.on { display: flex; }
+
+    .results-panel { display: none; flex-direction: column; gap: 16px; }
     .results-panel.on { display: flex; }
 
     .results-header {
@@ -223,17 +214,9 @@
       text-transform: uppercase;
     }
 
-    .results-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+    .results-actions { display: flex; gap: 8px; align-items: center; }
 
-    .count {
-      font-family: var(--mono);
-      font-size: 0.68rem;
-      color: var(--accent);
-    }
+    .count { font-family: var(--mono); font-size: 0.68rem; color: var(--accent); }
 
     .btn-ghost {
       font-family: var(--mono);
@@ -250,11 +233,23 @@
 
     .btn-ghost:hover { border-color: var(--accent2); color: var(--accent2); }
 
-    .filters {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
+    .btn-accent {
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      padding: 7px 16px;
+      border-radius: 4px;
+      border: 1px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.15s, color 0.15s;
     }
+
+    .btn-accent:hover { background: var(--accent); color: #000; }
+    .btn-accent:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .filters { display: flex; gap: 6px; flex-wrap: wrap; }
 
     .fbtn {
       font-family: var(--mono);
@@ -270,11 +265,9 @@
     }
 
     .fbtn:hover { border-color: var(--accent); color: var(--accent); }
-    .fbtn.on { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+    .fbtn.on { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700; }
 
-    .search-row {
-      position: relative;
-    }
+    .search-row { position: relative; }
 
     .search-input {
       width: 100%;
@@ -297,14 +290,15 @@
       top: 50%;
       transform: translateY(-50%);
       color: var(--muted);
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       pointer-events: none;
     }
 
     .meta-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
     }
 
     .meta-item {
@@ -318,7 +312,6 @@
     }
 
     .meta-item:hover { background: var(--surface2); }
-
     .meta-item.ai { border-left: 2px solid var(--accent); padding-left: 10px; }
 
     .mk {
@@ -355,11 +348,7 @@
       line-height: 1.55;
     }
 
-    .section-sep {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 4px 0;
-    }
+    .section-sep { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
 
     .empty {
       text-align: center;
@@ -369,19 +358,224 @@
       color: var(--muted);
     }
 
+    .analysis-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .analysis-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .card-head {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-body { padding: 16px; }
+
+    .ela-img {
+      width: 100%;
+      border-radius: 4px;
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .score-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .score-item { display: flex; flex-direction: column; gap: 4px; }
+
+    .score-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted2);
+    }
+
+    .score-pct { color: var(--accent); }
+
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: var(--border2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-fill.high { background: #e65a5a; }
+    .progress-fill.mid { background: #f0b348; }
+
+    .c2pa-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+    }
+
+    .c2pa-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .c2pa-dot.ok { background: var(--accent); }
+    .c2pa-dot.warn { background: var(--warn); }
+    .c2pa-dot.absent { background: var(--muted); }
+
+    .c2pa-details {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .c2pa-row {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 0.67rem;
+    }
+
+    .c2pa-key { color: var(--muted2); }
+    .c2pa-val { color: var(--text); word-break: break-word; }
+
+    .reverse-section {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .reverse-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .reverse-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .reverse-item:last-child { border-bottom: none; }
+
+    .reverse-item a {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--accent2);
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .reverse-item a:hover { text-decoration: underline; }
+
+    .reverse-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .reverse-date {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+    }
+
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  </style>
+  <style>
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      z-index: 100;
+    }
+    .modal-overlay.on { opacity: 1; visibility: visible; }
+
+    .modal-content {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      width: 90%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+    }
+    .modal-overlay.on .modal-content { transform: scale(1); }
+
+    .modal-head { display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 1.2rem; font-weight: 700; }
+    .modal-close { font-size: 1.5rem; color: var(--muted); cursor: pointer; border: none; background: none; line-height: 1; }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { font-size: 0.85rem; color: var(--muted2); line-height: 1.6; }
+    .modal-body p { margin-bottom: 1em; }
+    .modal-body strong { color: var(--text); font-weight: 700; }
+
+    footer {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--accent2); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <div class="logo">Meta<span>Scan</span></div>
-    <div class="api-row">
-      <span class="api-label">API</span>
-      <input class="api-input" id="apiUrl" type="text" value="http://localhost:5000" placeholder="http://localhost:8000"/>
+    <div class="logo">File<span>Spector</span></div>
+    <div class="header-actions">
+      <button class="btn-ghost" id="aboutBtn">Sobre</button>
+      <div class="api-row">
+        <span class="api-label">API</span>
+        <input class="api-input" id="apiUrl" type="text" value="http://localhost:5000" placeholder="http://localhost:8000"/>
+      </div>
     </div>
   </header>
 
@@ -402,30 +596,108 @@
   <div class="status" id="status"></div>
 
   <div class="results-panel" id="panel">
-    <div class="results-header">
-      <span class="results-title">Metadados</span>
-      <div class="results-actions">
-        <span class="count" id="cnt"></span>
-        <button class="btn-ghost" id="copyBtn">copiar JSON</button>
+
+    <div class="tab-bar">
+      <button class="tab-btn on" data-tab="meta">Metadados</button>
+      <button class="tab-btn" data-tab="analise">Analise Completa</button>
+    </div>
+
+    <div class="tab-pane on" id="tab-meta">
+      <div class="results-header">
+        <span class="results-title">Metadados</span>
+        <div class="results-actions">
+          <span class="count" id="cnt"></span>
+          <button class="btn-ghost" id="copyBtn">copiar JSON</button>
+        </div>
       </div>
+
+      <div class="filters" id="filters">
+        <button class="fbtn on" data-f="all">Todos</button>
+        <button class="fbtn" data-f="ai">IA</button>
+        <button class="fbtn" data-f="file">Arquivo</button>
+        <button class="fbtn" data-f="media">Midia</button>
+        <button class="fbtn" data-f="other">Outros</button>
+      </div>
+
+      <div class="search-row">
+        <span class="search-icon">@</span>
+        <input class="search-input" id="search" type="text" placeholder="buscar chave ou valor..."/>
+      </div>
+
+      <div class="meta-list" id="mlist"></div>
     </div>
 
-    <div class="filters" id="filters">
-      <button class="fbtn on" data-f="all">Todos</button>
-      <button class="fbtn" data-f="ai">IA</button>
-      <button class="fbtn" data-f="file">Arquivo</button>
-      <button class="fbtn" data-f="media">Midia</button>
-      <button class="fbtn" data-f="other">Outros</button>
+    <div class="tab-pane" id="tab-analise">
+      <div class="results-header">
+        <span class="results-title">Analise Completa</span>
+        <div class="results-actions">
+          <button class="btn-accent" id="runAnalyze">Executar analise</button>
+        </div>
+      </div>
+
+      <div class="analysis-grid" id="analysisGrid" style="display:none">
+
+        <div class="analysis-card" id="cardEla" style="display:none">
+          <div class="card-head">ELA — Error Level Analysis</div>
+          <div class="card-body">
+            <img class="ela-img" id="elaImg" src="" alt="ELA"/>
+          </div>
+        </div>
+
+        <div class="analysis-card" id="cardScore" style="display:none">
+          <div class="card-head">Score de IA — Hive Moderation</div>
+          <div class="card-body">
+            <div class="score-row" id="scoreRow"></div>
+          </div>
+        </div>
+
+        <div class="analysis-card" id="cardC2pa" style="display:none">
+          <div class="card-head">C2PA — Certificado de Origem</div>
+          <div class="card-body">
+            <div class="c2pa-status" id="c2paStatus"></div>
+            <div class="c2pa-details" id="c2paDetails"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="analysis-card reverse-section">
+        <div class="card-head">
+          Busca Reversa de Imagem
+          <button class="btn-accent" id="runReverse">Buscar</button>
+        </div>
+        <div class="card-body">
+          <div id="reverseResults"></div>
+        </div>
+      </div>
+
     </div>
 
-    <div class="search-row">
-      <span class="search-icon">@</span>
-      <input class="search-input" id="search" type="text" placeholder="buscar chave ou valor..."/>
-    </div>
-
-    <div class="meta-list" id="mlist"></div>
   </div>
 
+  <footer>
+    <p><a href="https://github.com/T1wrt3/Metadados_fsa" target="_blank" rel="noopener noreferrer">Ver projeto no GitHub</a></p>
+  </footer>
+
+</div>
+
+<div class="modal-overlay" id="aboutModal">
+  <div class="modal-content">
+    <div class="modal-head">
+      <h2 class="modal-title">Sobre o FileSpector</h2>
+      <button class="modal-close" id="closeModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>
+        <strong>FileSpector</strong> é uma ferramenta de análise forense para arquivos de mídia.
+        Ela permite extrair metadados ocultos, verificar a autenticidade com certificados C2PA,
+        detectar conteúdo gerado por IA e encontrar cópias online com busca reversa.
+      </p>
+      <p>
+        Todas as análises são processadas de forma segura e os arquivos não são armazenados.
+      </p>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -480,6 +752,7 @@
   let allMeta = {};
   let activeFilter = "all";
   let searchQ = "";
+  let currentFile = null;
 
   function render() {
     const list = document.getElementById("mlist");
@@ -528,6 +801,96 @@
     });
   }
 
+  function renderAnalysis(data) {
+    const grid = document.getElementById("analysisGrid");
+    grid.style.display = "flex";
+
+    if (data.ela) {
+      const card = document.getElementById("cardEla");
+      card.style.display = "block";
+      document.getElementById("elaImg").src = "data:image/png;base64," + data.ela;
+    }
+
+    if (data.score_ia && Object.keys(data.score_ia).length > 0) {
+      const card = document.getElementById("cardScore");
+      card.style.display = "block";
+      const row = document.getElementById("scoreRow");
+      row.innerHTML = "";
+      const sorted = Object.entries(data.score_ia).sort((a,b) => b[1] - a[1]);
+      sorted.forEach(([label, score]) => {
+        const pct = Math.round(score * 100);
+        const fillClass = pct >= 70 ? "high" : pct >= 40 ? "mid" : "";
+        const item = document.createElement("div");
+        item.className = "score-item";
+        item.innerHTML = `
+          <div class="score-label-row">
+            <span>${label}</span>
+            <span class="score-pct">${pct}%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill ${fillClass}" style="width:${pct}%"></div>
+          </div>
+        `;
+        row.appendChild(item);
+      });
+    }
+
+    if (data.c2pa && typeof data.c2pa.presente !== "undefined") {
+      const card = document.getElementById("cardC2pa");
+      card.style.display = "block";
+      const statusEl = document.getElementById("c2paStatus");
+      const detailsEl = document.getElementById("c2paDetails");
+
+      const { presente, valido, assinante, software, acao } = data.c2pa;
+
+      let dotClass = "absent";
+      let label = "Certificado ausente";
+      if (presente && valido) { dotClass = "ok"; label = "Certificado presente e valido"; }
+      else if (presente && !valido) { dotClass = "warn"; label = "Certificado presente mas invalido"; }
+
+      statusEl.innerHTML = `<div class="c2pa-dot ${dotClass}"></div><span>${label}</span>`;
+
+      detailsEl.innerHTML = "";
+      if (presente) {
+        const fields = [
+          ["Assinante", assinante],
+          ["Software", software],
+          ["Acao", acao],
+        ];
+        fields.forEach(([k, v]) => {
+          if (v) {
+            const row = document.createElement("div");
+            row.className = "c2pa-row";
+            row.innerHTML = `<span class="c2pa-key">${k}</span><span class="c2pa-val">${v}</span>`;
+            detailsEl.appendChild(row);
+          }
+        });
+      }
+    }
+  }
+
+  function renderReverse(resultados) {
+    const container = document.getElementById("reverseResults");
+    if (!resultados || resultados.length === 0) {
+      container.innerHTML = '<div class="empty">nenhum resultado encontrado</div>';
+      return;
+    }
+    const list = document.createElement("div");
+    list.className = "reverse-list";
+    resultados.forEach(item => {
+      const el = document.createElement("div");
+      el.className = "reverse-item";
+      el.innerHTML = `
+        <div class="reverse-title">${item.titulo || "(sem titulo)"}</div>
+        <a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.url}</a>
+        ${item.data ? `<div class="reverse-date">${item.data}</div>` : ""}
+      `;
+      list.appendChild(el);
+    });
+    container.innerHTML = "";
+    container.appendChild(list);
+  }
+
   const dz = document.getElementById("dz");
   const fi = document.getElementById("fi");
 
@@ -542,6 +905,7 @@
   fi.addEventListener("change", e => { if (e.target.files[0]) process(e.target.files[0]); });
 
   async function process(file) {
+    currentFile = file;
     const ext = file.name.split(".").pop().toUpperCase();
     document.getElementById("fname").textContent = file.name;
     document.getElementById("fsize").textContent = fmtBytes(file.size);
@@ -577,11 +941,87 @@
       searchQ = "";
       render();
 
+      document.getElementById("analysisGrid").style.display = "none";
+      document.getElementById("reverseResults").innerHTML = "";
+      ["cardEla","cardScore","cardC2pa"].forEach(id => {
+        document.getElementById(id).style.display = "none";
+      });
+
     } catch (err) {
       st.className = "status on err";
       st.textContent = "nao foi possivel conectar em " + base + " — verifique se o servidor esta rodando";
     }
   }
+
+  document.querySelectorAll(".fbtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeFilter = btn.dataset.f;
+      document.querySelectorAll(".fbtn").forEach(b => b.classList.remove("on"));
+      btn.classList.add("on");
+      render();
+    });
+  });
+
+  document.getElementById("runAnalyze").addEventListener("click", async () => {
+    if (!currentFile) return;
+    const btn = document.getElementById("runAnalyze");
+    btn.disabled = true;
+    btn.textContent = "analisando...";
+
+    const base = document.getElementById("apiUrl").value.replace(/\/$/, "");
+    const form = new FormData();
+    form.append("file", currentFile);
+
+    try {
+      const res = await fetch(base + "/analyze", { method: "POST", body: form });
+      const data = await res.json();
+      if (data.erro) {
+        alert("Erro: " + data.erro);
+        return;
+      }
+      renderAnalysis(data);
+    } catch (err) {
+      alert("Falha ao conectar em " + base);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Executar analise";
+    }
+  });
+
+  document.getElementById("runReverse").addEventListener("click", async () => {
+    if (!currentFile) return;
+    const btn = document.getElementById("runReverse");
+    btn.disabled = true;
+    btn.textContent = "buscando...";
+
+    const base = document.getElementById("apiUrl").value.replace(/\/$/, "");
+    const form = new FormData();
+    form.append("file", currentFile);
+
+    try {
+      const res = await fetch(base + "/reverse", { method: "POST", body: form });
+      const data = await res.json();
+      if (data.erro) {
+        document.getElementById("reverseResults").innerHTML = '<div class="empty">erro: ' + data.erro + '</div>';
+        return;
+      }
+      renderReverse(data.resultados);
+    } catch (err) {
+      document.getElementById("reverseResults").innerHTML = '<div class="empty">falha ao conectar</div>';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Buscar";
+    }
+  });
+
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("on"));
+      document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("on"));
+      btn.classList.add("on");
+      document.getElementById("tab-" + btn.dataset.tab).classList.add("on");
+    });
+  });
 
   document.querySelectorAll(".fbtn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -603,6 +1043,14 @@
     b.textContent = "copiado";
     setTimeout(() => b.textContent = "copiar JSON", 1800);
   });
+
+  const aboutModal = document.getElementById("aboutModal");
+  document.getElementById("aboutBtn").addEventListener("click", () => {
+    aboutModal.classList.add("on");
+  });
+  document.getElementById("closeModal").addEventListener("click", () => aboutModal.classList.remove("on"));
+  aboutModal.addEventListener("click", (e) => { if (e.target === aboutModal) aboutModal.classList.remove("on"); });
+
 </script>
 </body>
 </html>
