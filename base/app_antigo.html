@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MetaScan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080808;
+      --surface: #111;
+      --surface2: #181818;
+      --border: #222;
+      --border2: #2e2e2e;
+      --accent: #d4f53c;
+      --accent2: #3cffd4;
+      --danger: #ff4d4d;
+      --text: #e2e2e2;
+      --muted: #555;
+      --muted2: #888;
+      --mono: 'Space Mono', monospace;
+      --sans: 'Syne', sans-serif;
+      --radius: 8px;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 56px 24px 80px;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 820px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .logo {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+
+    .logo span { color: var(--accent); }
+
+    .api-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .api-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted2);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .api-input {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      color: var(--text);
+      padding: 5px 10px;
+      width: 200px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .api-input:focus { border-color: var(--accent); }
+
+    .dropzone {
+      border: 1.5px dashed var(--border2);
+      border-radius: var(--radius);
+      padding: 56px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.2s, background 0.2s;
+      text-align: center;
+    }
+
+    .dropzone:hover, .dropzone.over {
+      border-color: var(--accent);
+      background: rgba(212,245,60,0.03);
+    }
+
+    .dropzone input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .dz-ring {
+      width: 56px;
+      height: 56px;
+      border: 1.5px solid var(--border2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .dz-title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .dz-sub {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted2);
+      letter-spacing: 0.04em;
+    }
+
+    .dz-types {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 10px;
+      letter-spacing: 0.05em;
+    }
+
+    .file-bar {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+    }
+
+    .file-bar.on { display: flex; }
+
+    .file-bar .fname {
+      flex: 1;
+      color: var(--accent2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-bar .fsize { color: var(--muted2); }
+
+    .file-bar .ftype {
+      font-size: 0.6rem;
+      border: 1px solid var(--border2);
+      border-radius: 3px;
+      padding: 2px 7px;
+      color: var(--muted2);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .status {
+      display: none;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted2);
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    .status.on { display: block; }
+
+    .status.err { color: var(--danger); }
+
+    .results-panel {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .results-panel.on { display: flex; }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .results-title {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      color: var(--muted2);
+      text-transform: uppercase;
+    }
+
+    .results-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .count {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--accent);
+    }
+
+    .btn-ghost {
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      padding: 5px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--muted2);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-ghost:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    .filters {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .fbtn {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.06em;
+      padding: 5px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .fbtn:hover { border-color: var(--accent); color: var(--accent); }
+    .fbtn.on { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+
+    .search-row {
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      color: var(--text);
+      padding: 9px 14px 9px 36px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-input:focus { border-color: var(--accent); }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 0.75rem;
+      pointer-events: none;
+    }
+
+    .meta-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .meta-item {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 16px;
+      padding: 9px 12px;
+      border-radius: 6px;
+      align-items: start;
+      transition: background 0.1s;
+    }
+
+    .meta-item:hover { background: var(--surface2); }
+
+    .meta-item.ai { border-left: 2px solid var(--accent); padding-left: 10px; }
+
+    .mk {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted2);
+      letter-spacing: 0.02em;
+      word-break: break-word;
+      padding-top: 1px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .meta-item.ai .mk { color: var(--accent); }
+
+    .ai-tag {
+      font-family: var(--mono);
+      font-size: 0.55rem;
+      background: var(--accent);
+      color: #000;
+      border-radius: 2px;
+      padding: 1px 5px;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+
+    .mv {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text);
+      word-break: break-word;
+      line-height: 1.55;
+    }
+
+    .section-sep {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 4px 0;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">Meta<span>Scan</span></div>
+    <div class="api-row">
+      <span class="api-label">API</span>
+      <input class="api-input" id="apiUrl" type="text" value="http://localhost:5000" placeholder="http://localhost:8000"/>
+    </div>
+  </header>
+
+  <div class="dropzone" id="dz">
+    <input type="file" id="fi" accept="image/*,video/*,.heic,.heif,.raw,.mkv,.avi,.flv,.wmv"/>
+    <div class="dz-ring">+</div>
+    <div class="dz-title">Envie o arquivo</div>
+    <div class="dz-sub">Escolha ou arraste uma imagem ou video</div>
+    <div class="dz-types">JPG · PNG · WEBP · HEIC · TIFF · MP4 · MOV · MKV · AVI · WEBM</div>
+  </div>
+
+  <div class="file-bar" id="fbar">
+    <span class="ftype" id="ftype"></span>
+    <span class="fname" id="fname"></span>
+    <span class="fsize" id="fsize"></span>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="results-panel" id="panel">
+    <div class="results-header">
+      <span class="results-title">Metadados</span>
+      <div class="results-actions">
+        <span class="count" id="cnt"></span>
+        <button class="btn-ghost" id="copyBtn">copiar JSON</button>
+      </div>
+    </div>
+
+    <div class="filters" id="filters">
+      <button class="fbtn on" data-f="all">Todos</button>
+      <button class="fbtn" data-f="ai">IA</button>
+      <button class="fbtn" data-f="file">Arquivo</button>
+      <button class="fbtn" data-f="media">Midia</button>
+      <button class="fbtn" data-f="other">Outros</button>
+    </div>
+
+    <div class="search-row">
+      <span class="search-icon">@</span>
+      <input class="search-input" id="search" type="text" placeholder="buscar chave ou valor..."/>
+    </div>
+
+    <div class="meta-list" id="mlist"></div>
+  </div>
+
+</div>
+
+<script>
+  const AI_KEYS = new Set([
+    "credit","digitalsourcetype","digitalsourcefiletype",
+    "claimgeneratorinfoname","claimgeneratorinfoversion",
+    "actionsdescription","actionsaction","actionsdigitalsourcetype",
+    "xmptoolkit","instanceid","signaturealg","signature",
+    "encoder","handlervendorid",
+    "createdate","modifydate","trackcreatedate","trackmodifydate",
+    "mediacreatedate","mediamodifydate",
+    "jumdtype","jumdlabel","createdassertionsurl",
+    "claimgenerator","c2pa_present","synthid",
+  ]);
+
+  const FILE_KEYS = new Set([
+    "_file_type","_file_name","_file_size_kb",
+    "filename","filesize","filetype","filetypeextension",
+    "mimetype","majorbrand","minorversion","compatiblebrands",
+    "mediadatasize","mediadataoffset",
+  ]);
+
+  const MEDIA_KEYS = new Set([
+    "imagewidth","imageheight","imagesize","megapixels",
+    "bitdepth","colortype","compression","filter","interlace",
+    "duration","videoframerate","avgbitrate","rotation",
+    "audiochannels","audiobitspersample","audiosamplerate","audioformat",
+    "mediaheaderversion","mediatimescale","mediaduration","medialanguagecode",
+    "buffersize","maxbitrate","averagebitrate",
+    "xresolution","yresolution","graphicsmode","opcolor",
+    "compressorid","sourceimagewidth","sourceimageheight",
+    "trackduration","timescale","preferredrate","preferredvolume",
+    "nexttrackid","trackid","tracklayer","trackvolume",
+    "movieheaderversion","matrixstructure","balance",
+    "audiobitsperssample",
+  ]);
+
+  function classify(key) {
+    const k = key.toLowerCase().replace(/[\s_\-]/g,"");
+    if (AI_KEYS.has(k)) return "ai";
+    if (FILE_KEYS.has(k)) return "file";
+    if (MEDIA_KEYS.has(k)) return "media";
+    return "other";
+  }
+
+  function fmtBytes(b) {
+    if (b < 1024) return b + " B";
+    if (b < 1024*1024) return (b/1024).toFixed(1) + " KB";
+    return (b/(1024*1024)).toFixed(2) + " MB";
+  }
+
+  let allMeta = {};
+  let activeFilter = "all";
+  let searchQ = "";
+
+  function render() {
+    const list = document.getElementById("mlist");
+    list.innerHTML = "";
+
+    let entries = Object.entries(allMeta);
+
+    if (activeFilter !== "all") {
+      entries = entries.filter(([k]) => classify(k) === activeFilter);
+    }
+
+    if (searchQ) {
+      const q = searchQ.toLowerCase();
+      entries = entries.filter(([k,v]) =>
+        k.toLowerCase().includes(q) || String(v).toLowerCase().includes(q)
+      );
+    }
+
+    document.getElementById("cnt").textContent = entries.length + " campos";
+
+    if (entries.length === 0) {
+      list.innerHTML = '<div class="empty">nenhum resultado</div>';
+      return;
+    }
+
+    entries.sort((a,b) => {
+      const order = {ai:0, file:1, media:2, other:3};
+      return (order[classify(a[0])]||3) - (order[classify(b[0])]||3);
+    });
+
+    let lastCat = null;
+    entries.forEach(([key, val]) => {
+      const cat = classify(key);
+      if (activeFilter === "all" && lastCat !== null && cat !== lastCat) {
+        list.appendChild(document.createElement("hr")).className = "section-sep";
+      }
+      lastCat = cat;
+
+      const item = document.createElement("div");
+      item.className = "meta-item" + (cat === "ai" ? " ai" : "");
+      item.innerHTML = `
+        <div class="mk">${key}${cat === "ai" ? '<span class="ai-tag">IA</span>' : ""}</div>
+        <div class="mv">${String(val)}</div>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  const dz = document.getElementById("dz");
+  const fi = document.getElementById("fi");
+
+  dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("over"); });
+  dz.addEventListener("dragleave", () => dz.classList.remove("over"));
+  dz.addEventListener("drop", e => {
+    e.preventDefault();
+    dz.classList.remove("over");
+    const f = e.dataTransfer.files[0];
+    if (f) process(f);
+  });
+  fi.addEventListener("change", e => { if (e.target.files[0]) process(e.target.files[0]); });
+
+  async function process(file) {
+    const ext = file.name.split(".").pop().toUpperCase();
+    document.getElementById("fname").textContent = file.name;
+    document.getElementById("fsize").textContent = fmtBytes(file.size);
+    document.getElementById("ftype").textContent = ext;
+    document.getElementById("fbar").classList.add("on");
+    document.getElementById("panel").classList.remove("on");
+
+    const st = document.getElementById("status");
+    st.className = "status on";
+    st.textContent = "extraindo metadados...";
+
+    const base = document.getElementById("apiUrl").value.replace(/\/$/, "");
+    const form = new FormData();
+    form.append("file", file);
+
+    try {
+      const res = await fetch(base + "/metadata", { method: "POST", body: form });
+      const data = await res.json();
+
+      if (data.erro) {
+        st.className = "status on err";
+        st.textContent = "erro: " + data.erro;
+        return;
+      }
+
+      allMeta = data;
+      st.className = "status";
+      document.getElementById("panel").classList.add("on");
+
+      activeFilter = "all";
+      document.querySelectorAll(".fbtn").forEach(b => b.classList.toggle("on", b.dataset.f === "all"));
+      document.getElementById("search").value = "";
+      searchQ = "";
+      render();
+
+    } catch (err) {
+      st.className = "status on err";
+      st.textContent = "nao foi possivel conectar em " + base + " — verifique se o servidor esta rodando";
+    }
+  }
+
+  document.querySelectorAll(".fbtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeFilter = btn.dataset.f;
+      document.querySelectorAll(".fbtn").forEach(b => b.classList.remove("on"));
+      btn.classList.add("on");
+      render();
+    });
+  });
+
+  document.getElementById("search").addEventListener("input", e => {
+    searchQ = e.target.value.trim();
+    render();
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", () => {
+    navigator.clipboard.writeText(JSON.stringify(allMeta, null, 2));
+    const b = document.getElementById("copyBtn");
+    b.textContent = "copiado";
+    setTimeout(() => b.textContent = "copiar JSON", 1800);
+  });
+</script>
+</body>
+</html>
