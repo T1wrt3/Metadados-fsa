@@ -12,6 +12,7 @@ import numpy as np
 import requests
 from PIL import Image, ImageChops
 import io
+import cv2
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -39,7 +40,6 @@ ELA_QUALIDADE: int = 90
 ELA_FATOR_AMPLIFICACAO: int = 15
 ELA_VALOR_MAX: int = 255
 
-HIVE_API_URL: str = "https://api.thehive.ai/api/v2/task/sync"
 SERPAPI_URL: str = "https://serpapi.com/search"
 SERPAPI_ENGINE: str = "google_reverse_image"
 SERPAPI_MAX_RESULTADOS: int = 5
@@ -48,7 +48,6 @@ C2PA_TIMEOUT_S: int = 15
 
 
 def _detectar_tipo(nome: str) -> str:
-    """Retorna 'imagem' ou 'video' com base na extensao do arquivo."""
     ext = Path(nome).suffix.lower()
     if ext in TIPOS_IMAGEM:
         return "imagem"
@@ -58,7 +57,6 @@ def _detectar_tipo(nome: str) -> str:
 
 
 def _normalizar(dados: dict[str, Any]) -> dict[str, Any]:
-    """Remove chaves irrelevantes e campos binarios dos metadados brutos."""
     resultado: dict[str, Any] = {}
     for chave, valor in dados.items():
         chave_clean = chave.split(":")[-1]
@@ -73,7 +71,6 @@ def _normalizar(dados: dict[str, Any]) -> dict[str, Any]:
 
 
 def extrair_metadados(conteudo: bytes, nome_arquivo: str) -> dict[str, Any]:
-    """Extrai e normaliza metadados EXIF/XMP de imagem ou video."""
     tipo = _detectar_tipo(nome_arquivo)
     suffix = Path(nome_arquivo).suffix
 
@@ -99,7 +96,6 @@ def extrair_metadados(conteudo: bytes, nome_arquivo: str) -> dict[str, Any]:
 
 
 def ela(conteudo: bytes, sufixo: str) -> str:
-    """Gera imagem ELA em base64 a partir dos bytes da imagem original."""
     imagem_original = Image.open(io.BytesIO(conteudo)).convert("RGB")
 
     buffer_recomp = io.BytesIO()
@@ -118,32 +114,7 @@ def ela(conteudo: bytes, sufixo: str) -> str:
     return base64.b64encode(buffer_saida.getvalue()).decode()
 
 
-def score_ia(conteudo: bytes) -> dict[str, Any]:
-    """Envia imagem para a Hive API e retorna o dicionario de classes de IA."""
-    api_key = os.environ.get("HIVE_API_KEY", "")
-    headers = {"Authorization": f"Token {api_key}"}
-
-    try:
-        resposta = requests.post(
-            HIVE_API_URL,
-            headers=headers,
-            files={"media": conteudo},
-            timeout=30,
-        )
-        resposta.raise_for_status()
-        dados = resposta.json()
-        outputs = dados.get("status", [{}])[0].get("response", {}).get("output", [])
-        if outputs:
-            classes = outputs[0].get("classes", [])
-            return {item["class"]: item["score"] for item in classes if "class" in item}
-        return {}
-    except Exception as exc:
-        logger.error("Falha ao consultar Hive API: %s", exc)
-        return {}
-
-
 def verificar_c2pa(conteudo: bytes, sufixo: str) -> dict[str, Any]:
-    """Verifica certificado C2PA via c2patool e retorna campos de proveniencia."""
     resultado_padrao: dict[str, Any] = {
         "presente": False,
         "valido": False,
@@ -203,27 +174,247 @@ def verificar_c2pa(conteudo: bytes, sufixo: str) -> dict[str, Any]:
 
 
 def reverse_search(conteudo: bytes) -> list[dict[str, Any]]:
-    """Realiza busca reversa de imagem via SerpAPI e retorna ate 5 resultados."""
     api_key = os.environ.get("SERPAPI_KEY", "")
+    if not api_key:
+        raise ValueError("A chave de API da SerpApi (SERPAPI_KEY) nao foi configurada no ambiente.")
+
+    data = {
+        "engine": SERPAPI_ENGINE,
+        "api_key": api_key,
+    }
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
 
     try:
         resposta = requests.post(
             SERPAPI_URL,
-            data={"engine": SERPAPI_ENGINE, "api_key": api_key},
-            files={"encoded_image": conteudo},
+            data=data,
+            files={"image": conteudo},
+            headers=headers,
             timeout=30,
         )
         resposta.raise_for_status()
         dados = resposta.json()
+
+        if "error" in dados:
+            raise Exception(f"Erro da API SerpApi: {dados['error']}")
+
         resultados_brutos = dados.get("image_results", [])[:SERPAPI_MAX_RESULTADOS]
         return [
-            {
-                "titulo": item.get("title", ""),
-                "url": item.get("link", ""),
-                "data": item.get("date", ""),
-            }
+            {"titulo": item.get("title"), "url": item.get("link"), "data": item.get("date")}
             for item in resultados_brutos
         ]
     except Exception as exc:
-        logger.error("Falha ao realizar busca reversa via SerpAPI: %s", exc)
-        return []
+        logger.error("Falha na busca reversa via SerpAPI: %s", exc)
+        raise Exception(f"Falha na comunicacao com o servico de busca: {exc}") from exc
+
+
+def analise(conteudo: bytes) -> dict[str, Any]:
+    try:
+        imagem_np = np.frombuffer(conteudo, np.uint8)
+        img_cv = cv2.imdecode(imagem_np, cv2.IMREAD_COLOR)
+        if img_cv is None:
+            return {}
+
+        img_gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+        img_yuv = cv2.cvtColor(img_cv, cv2.COLOR_BGR2YUV)
+        y_channel, _, _ = cv2.split(img_yuv)
+
+        sobel_x = cv2.Sobel(y_channel, cv2.CV_64F, 1, 0, ksize=3)
+        sobel_y = cv2.Sobel(y_channel, cv2.CV_64F, 0, 1, ksize=3)
+        grad_magnitude = np.sqrt(sobel_x**2 + sobel_y**2)
+        grad_normalized = cv2.normalize(
+            grad_magnitude, None, 0, 255, cv2.NORM_MINMAX
+        ).astype(np.uint8)
+        _, buffer_grad = cv2.imencode(".png", grad_normalized)
+        grad_b64 = base64.b64encode(buffer_grad).decode("utf-8")
+
+        srm_kernel = np.array([[-1, 2, -1], [2, -4, 2], [-1, 2, -1]]) / 4.0
+        noise_residual = cv2.filter2D(img_gray, -1, srm_kernel)
+
+        block_size = 16
+        h, w = noise_residual.shape
+        n_rows = h // block_size
+        n_cols = w // block_size
+
+        heatmap = np.zeros((n_rows, n_cols), dtype=np.float32)
+        for r_idx in range(n_rows):
+            for c_idx in range(n_cols):
+                r = r_idx * block_size
+                c = c_idx * block_size
+                block = noise_residual[r:r + block_size, c:c + block_size]
+                heatmap[r_idx, c_idx] = float(np.var(block))
+
+        overall_variance = float(np.mean(heatmap)) if heatmap.size > 0 else 0.0
+
+        heatmap_norm = cv2.normalize(
+            heatmap, None, 0, 255, cv2.NORM_MINMAX
+        ).astype(np.uint8)
+        heatmap_color = cv2.applyColorMap(heatmap_norm, cv2.COLORMAP_JET)
+        heatmap_resized = cv2.resize(
+            heatmap_color, (w, h), interpolation=cv2.INTER_NEAREST
+        )
+        _, buffer_heatmap = cv2.imencode(".png", heatmap_resized)
+        noise_heatmap_b64 = base64.b64encode(buffer_heatmap).decode("utf-8")
+
+        fft_b64, fft_simetria = _analisar_fft(img_gray)
+        corr_rgb = _correlacao_rgb(img_cv)
+        aber_cromatica = _aberracao_cromatica(img_cv)
+
+        return {
+            "gradient_map_b64": grad_b64,
+            "noise_heatmap_b64": noise_heatmap_b64,
+            "noise_variance": round(overall_variance, 4),
+            "fft_map_b64": fft_b64,
+            "fft_simetria": round(fft_simetria, 4),
+            "correlacao_rgb": corr_rgb,
+            "aberracao_cromatica": round(aber_cromatica, 4),
+        }
+    except Exception as exc:
+        logger.error("Falha na analise forense avancada: %s", exc)
+        return {}
+
+
+def _analisar_fft(img_gray: np.ndarray) -> tuple[str, float]:
+    f = np.fft.fft2(img_gray.astype(np.float32))
+    fshift = np.fft.fftshift(f)
+    magnitude = np.log1p(np.abs(fshift))
+
+    magnitude_norm = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+    magnitude_color = cv2.applyColorMap(magnitude_norm, cv2.COLORMAP_INFERNO)
+    _, buffer_fft = cv2.imencode(".png", magnitude_color)
+    fft_b64 = base64.b64encode(buffer_fft).decode("utf-8")
+
+    h, w = magnitude.shape
+    top_half = magnitude[:h // 2, :]
+    bottom_half = np.flipud(magnitude[h // 2:, :])
+    min_h = min(top_half.shape[0], bottom_half.shape[0])
+    diff = np.abs(top_half[:min_h] - bottom_half[:min_h])
+    simetria = float(1.0 - (np.mean(diff) / (np.max(magnitude) + 1e-9)))
+
+    return fft_b64, simetria
+
+
+def _correlacao_rgb(img_cv: np.ndarray) -> dict[str, float]:
+    b, g, r = cv2.split(img_cv.astype(np.float32))
+
+    def corr(a: np.ndarray, b_: np.ndarray) -> float:
+        a_flat = a.flatten()
+        b_flat = b_.flatten()
+        if np.std(a_flat) < 1e-9 or np.std(b_flat) < 1e-9:
+            return 1.0
+        return float(np.corrcoef(a_flat, b_flat)[0, 1])
+
+    return {
+        "rg": round(corr(r, g), 4),
+        "rb": round(corr(r, b), 4),
+        "gb": round(corr(g, b), 4),
+    }
+
+
+def _aberracao_cromatica(img_cv: np.ndarray) -> float:
+
+    img_suavizada = cv2.GaussianBlur(img_cv, (3, 3), 0)
+    b, g, r = cv2.split(img_suavizada)
+
+    edges_r = cv2.Canny(r, 30, 90)
+    edges_g = cv2.Canny(g, 30, 90)
+    edges_b = cv2.Canny(b, 30, 90)
+
+    mask = (edges_r > 0) | (edges_g > 0) | (edges_b > 0)
+    total_pixels = float(np.count_nonzero(mask)) + 1e-9
+
+    diff_rg = np.count_nonzero(cv2.bitwise_xor(edges_r, edges_g) & mask)
+    diff_rb = np.count_nonzero(cv2.bitwise_xor(edges_r, edges_b) & mask)
+    diff_gb = np.count_nonzero(cv2.bitwise_xor(edges_g, edges_b) & mask)
+
+    desalinhamento_total = float(diff_rg + diff_rb + diff_gb)
+    return desalinhamento_total / (2.0 * total_pixels)
+
+
+def calcular_score_alerta(
+    metadados: dict,
+    c2pa: dict,
+    forense_avancada: dict,
+) -> dict[str, Any]:
+    score = 0
+    regras_acionadas = []
+
+
+    exif_keys = [k for k in metadados.keys() if not k.startswith("_")]
+    exif_count = len(exif_keys)
+
+    if exif_count == 0:
+        score += 15
+        regras_acionadas.append("Nenhum metadado EXIF encontrado — comum em imagens geradas por IA ou redes sociais.")
+    elif exif_count < 6:
+        score += 8
+        regras_acionadas.append("Poucos metadados EXIF — possível remoção por rede social ou processamento.")
+
+    if c2pa.get("presente") and not c2pa.get("valido"):
+        score += 35
+        regras_acionadas.append("Certificado C2PA presente, mas inválido — possível adulteração ou IA não assinada.")
+
+
+    variance = forense_avancada.get("noise_variance", 999)
+
+    if variance < 3.0:
+        score += 30
+        regras_acionadas.append(f"Ruído estrutural muito uniforme (variância {variance:.2f}) — típico de IA generativa.")
+    elif variance < 7.0:
+        score += 15
+        regras_acionadas.append(f"Ruído estrutural relativamente uniforme (variância {variance:.2f}) — possível IA ou forte compressão.")
+    elif variance > 80:
+        score += 20
+        regras_acionadas.append(f"Padrão de ruído muito alto (variância {variance:.2f}) — indica fortes edições ou artefatos de processamento.")
+
+
+    fft_simetria = forense_avancada.get("fft_simetria", 0.0)
+
+    if fft_simetria > 0.98:
+        score += 20
+        regras_acionadas.append(f"Espectro de frequência altamente simétrico ({fft_simetria:.2%}) — ausência de ruído natural de câmera.")
+
+    corr = forense_avancada.get("correlacao_rgb", {})
+    if corr:
+        media_corr = (
+            abs(corr.get("rg", 0.0))
+            + abs(corr.get("rb", 0.0))
+            + abs(corr.get("gb", 0.0))
+        ) / 3.0
+
+        if media_corr > 0.98:
+            score += 18
+            regras_acionadas.append(
+                f"Canais RGB extremamente correlacionados ({media_corr:.2%}) — típico de sintetizadores de imagem."
+            )
+        elif media_corr > 0.92:
+            score += 6
+            regras_acionadas.append(
+                f"Canais RGB altamente correlacionados ({media_corr:.2%}) — compatível com IA ou processamento pesado."
+            )
+
+
+    aber = forense_avancada.get("aberracao_cromatica", -1.0)
+
+    if aber >= 0 and aber < 0.03:
+        score += 15
+        regras_acionadas.append(
+            f"Aberração cromática muito baixa ({aber:.4f}) — câmeras reais geralmente produzem algum desalinhamento entre canais."
+        )
+    elif aber > 0.20:
+        score += 5
+        regras_acionadas.append(
+            f"Aberração cromática muito alta ({aber:.4f}) — indica forte manipulação ou artefatos de compressão/edição."
+        )
+
+
+    if score >= 50:
+        nivel = "Alto"
+    elif score >= 25:
+        nivel = "Médio"
+    else:
+        nivel = "Baixo"
+
+    return {"score": score, "nivel": nivel, "regras": regras_acionadas}
