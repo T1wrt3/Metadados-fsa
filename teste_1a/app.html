@@ -16,8 +16,9 @@
       --border2: #ced4da;
       --accent: #0091ff;
       --accent2: #0071cc;
-      --danger: #ff4d4d;
+      --danger: #e03131;
       --warn: #f5a623;
+      --ok: #2f9e44;
       --text: #212529;
       --muted: #899199;
       --muted2: #5a6169;
@@ -57,31 +58,36 @@
     .logo { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.07em; line-height: 1; }
     .logo span { color: var(--accent); }
 
-    .header-actions { display: flex; align-items: center; gap: 16px; }
-    .api-row { display: flex; align-items: center; gap: 8px; }
-
-    .api-label {
+    .btn-ghost {
       font-family: var(--mono);
-      font-size: 0.65rem;
-      color: var(--muted2);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .api-input {
-      font-family: var(--mono);
-      font-size: 0.7rem;
-      background: var(--surface);
-      border: 1px solid var(--border2);
+      font-size: 0.63rem;
+      padding: 5px 12px;
       border-radius: 4px;
-      color: var(--text);
-      padding: 5px 10px;
-      width: 200px;
-      outline: none;
-      transition: border-color 0.15s;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--muted2);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: border-color 0.15s, color 0.15s;
     }
 
-    .api-input:focus { border-color: var(--accent); }
+    .btn-ghost:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    .btn-accent {
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      padding: 7px 16px;
+      border-radius: 4px;
+      border: 1px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-accent:hover { background: var(--accent); color: #fff; }
+    .btn-accent:disabled { opacity: 0.35; cursor: not-allowed; }
 
     .dropzone {
       border: 1.5px dashed var(--border2);
@@ -99,7 +105,7 @@
 
     .dropzone:hover, .dropzone.over {
       border-color: var(--accent);
-      background: rgba(212,245,60,0.03);
+      background: rgba(0,145,255,0.03);
     }
 
     .dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
@@ -136,14 +142,20 @@
       background: var(--surface);
       border: 1px solid var(--border2);
       border-radius: var(--radius);
-      padding: 12px 16px;
+      overflow: hidden;
+    }
+
+    .file-bar.on { display: flex; flex-direction: column; }
+
+    .file-bar-top {
+      display: flex;
       align-items: center;
       gap: 12px;
+      padding: 12px 16px;
       font-family: var(--mono);
       font-size: 0.72rem;
     }
 
-    .file-bar.on { display: flex; }
     .file-bar .fname { flex: 1; color: var(--accent2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .file-bar .fsize { color: var(--muted2); }
     .file-bar .ftype {
@@ -154,6 +166,23 @@
       color: var(--muted2);
       text-transform: uppercase;
       letter-spacing: 0.06em;
+    }
+
+    .file-preview {
+      display: none;
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      background: var(--surface2);
+    }
+
+    .file-preview.on { display: block; }
+
+    .file-preview img {
+      max-height: 220px;
+      max-width: 100%;
+      border-radius: 4px;
+      display: block;
+      object-fit: contain;
     }
 
     .status {
@@ -215,39 +244,7 @@
     }
 
     .results-actions { display: flex; gap: 8px; align-items: center; }
-
     .count { font-family: var(--mono); font-size: 0.68rem; color: var(--accent); }
-
-    .btn-ghost {
-      font-family: var(--mono);
-      font-size: 0.63rem;
-      padding: 5px 12px;
-      border-radius: 4px;
-      border: 1px solid var(--border2);
-      background: transparent;
-      color: var(--muted2);
-      cursor: pointer;
-      letter-spacing: 0.04em;
-      transition: border-color 0.15s, color 0.15s;
-    }
-
-    .btn-ghost:hover { border-color: var(--accent2); color: var(--accent2); }
-
-    .btn-accent {
-      font-family: var(--mono);
-      font-size: 0.63rem;
-      padding: 7px 16px;
-      border-radius: 4px;
-      border: 1px solid var(--accent);
-      background: transparent;
-      color: var(--accent);
-      cursor: pointer;
-      letter-spacing: 0.04em;
-      transition: background 0.15s, color 0.15s;
-    }
-
-    .btn-accent:hover { background: var(--accent); color: #000; }
-    .btn-accent:disabled { opacity: 0.35; cursor: not-allowed; }
 
     .filters { display: flex; gap: 6px; flex-wrap: wrap; }
 
@@ -364,6 +361,17 @@
       gap: 20px;
     }
 
+    .sub-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .sub-grid > .analysis-card {
+      flex: 1 1 calc(50% - 10px);
+      min-width: 260px;
+    }
+
     .analysis-card {
       background: var(--surface);
       border: 1px solid var(--border2);
@@ -393,42 +401,6 @@
       image-rendering: pixelated;
     }
 
-    .score-row {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .score-item { display: flex; flex-direction: column; gap: 4px; }
-
-    .score-label-row {
-      display: flex;
-      justify-content: space-between;
-      font-family: var(--mono);
-      font-size: 0.65rem;
-      color: var(--muted2);
-    }
-
-    .score-pct { color: var(--accent); }
-
-    .progress-track {
-      width: 100%;
-      height: 4px;
-      background: var(--border2);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 2px;
-      transition: width 0.4s ease;
-    }
-
-    .progress-fill.high { background: #e65a5a; }
-    .progress-fill.mid { background: #f0b348; }
-
     .c2pa-status {
       display: flex;
       align-items: center;
@@ -443,7 +415,7 @@
       flex-shrink: 0;
     }
 
-    .c2pa-dot.ok { background: var(--accent); }
+    .c2pa-dot.ok { background: var(--ok); }
     .c2pa-dot.warn { background: var(--warn); }
     .c2pa-dot.absent { background: var(--muted); }
 
@@ -464,6 +436,41 @@
 
     .c2pa-key { color: var(--muted2); }
     .c2pa-val { color: var(--text); word-break: break-word; }
+
+    .alerta-display { display: flex; align-items: center; gap: 20px; }
+
+    .alerta-circulo {
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--sans);
+      font-weight: 800;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: 4px solid;
+    }
+
+    .alerta-circulo.alto  { background: #c83737; border-color: #e65a5a; }
+    .alerta-circulo.medio { background: #d6912a; border-color: #f0b348; }
+    .alerta-circulo.baixo { background: #276b39; border-color: #2f9e44; }
+
+    .alerta-info { display: flex; flex-direction: column; gap: 8px; }
+    .alerta-score { font-family: var(--mono); font-size: 0.8rem; }
+
+    .alerta-regras {
+      list-style-type: '▸ ';
+      padding-left: 20px;
+      font-size: 0.75rem;
+      color: var(--muted2);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
 
     .reverse-section {
       display: flex;
@@ -512,11 +519,35 @@
       color: var(--muted);
     }
 
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, var(--surface2) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skeleton-img {
+      width: 100%;
+      aspect-ratio: 4/3;
+    }
+
+    .skeleton-line {
+      height: 10px;
+      margin-bottom: 8px;
+    }
+
+    .skeleton-line.short { width: 60%; }
+    .skeleton-line.med { width: 80%; }
+
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-  </style>
-  <style>
+
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -529,6 +560,7 @@
       transition: opacity 0.2s, visibility 0.2s;
       z-index: 100;
     }
+
     .modal-overlay.on { opacity: 1; visibility: visible; }
 
     .modal-content {
@@ -543,6 +575,7 @@
       transform: scale(0.95);
       transition: transform 0.2s;
     }
+
     .modal-overlay.on .modal-content { transform: scale(1); }
 
     .modal-head { display: flex; justify-content: space-between; align-items: center; }
@@ -551,6 +584,7 @@
     .modal-close:hover { color: var(--text); }
     .modal-body { font-size: 0.85rem; color: var(--muted2); line-height: 1.6; }
     .modal-body p { margin-bottom: 1em; }
+    .modal-body p:last-child { margin-bottom: 0; }
     .modal-body strong { color: var(--text); font-weight: 700; }
 
     footer {
@@ -561,8 +595,31 @@
       font-size: 0.7rem;
       color: var(--muted);
     }
+
     footer a { color: var(--accent2); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
+
+    /* Tooltip style */
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      background: var(--muted2);
+      border-radius: 50%;
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: bold;
+      cursor: help;
+      margin-left: 8px;
+    }
+
+    .info-icon svg {
+      width: 12px;
+      height: 12px;
+      fill: #fff;
+    }
   </style>
 </head>
 <body>
@@ -570,12 +627,8 @@
 
   <header>
     <div class="logo">File<span>Spector</span></div>
-    <div class="header-actions">
+    <div style="display:flex;gap:8px;align-items:center;">
       <button class="btn-ghost" id="aboutBtn">Sobre</button>
-      <div class="api-row">
-        <span class="api-label">API</span>
-        <input class="api-input" id="apiUrl" type="text" value="http://localhost:5000" placeholder="http://localhost:8000"/>
-      </div>
     </div>
   </header>
 
@@ -583,14 +636,19 @@
     <input type="file" id="fi" accept="image/*,video/*,.heic,.heif,.raw,.mkv,.avi,.flv,.wmv"/>
     <div class="dz-ring">+</div>
     <div class="dz-title">Envie o arquivo</div>
-    <div class="dz-sub">Escolha ou arraste uma imagem ou video</div>
+    <div class="dz-sub">Escolha ou arraste uma imagem ou vídeo</div>
     <div class="dz-types">JPG · PNG · WEBP · HEIC · TIFF · MP4 · MOV · MKV · AVI · WEBM</div>
   </div>
 
   <div class="file-bar" id="fbar">
-    <span class="ftype" id="ftype"></span>
-    <span class="fname" id="fname"></span>
-    <span class="fsize" id="fsize"></span>
+    <div class="file-bar-top">
+      <span class="ftype" id="ftype"></span>
+      <span class="fname" id="fname"></span>
+      <span class="fsize" id="fsize"></span>
+    </div>
+    <div class="file-preview" id="filePreview">
+      <img id="previewImg" src="" alt="preview"/>
+    </div>
   </div>
 
   <div class="status" id="status"></div>
@@ -599,7 +657,7 @@
 
     <div class="tab-bar">
       <button class="tab-btn on" data-tab="meta">Metadados</button>
-      <button class="tab-btn" data-tab="analise">Analise Completa</button>
+      <button class="tab-btn" data-tab="analise">Análise Completa</button>
     </div>
 
     <div class="tab-pane on" id="tab-meta">
@@ -615,7 +673,7 @@
         <button class="fbtn on" data-f="all">Todos</button>
         <button class="fbtn" data-f="ai">IA</button>
         <button class="fbtn" data-f="file">Arquivo</button>
-        <button class="fbtn" data-f="media">Midia</button>
+        <button class="fbtn" data-f="media">Mídia</button>
         <button class="fbtn" data-f="other">Outros</button>
       </div>
 
@@ -628,34 +686,91 @@
     </div>
 
     <div class="tab-pane" id="tab-analise">
-      <div class="results-header">
-        <span class="results-title">Analise Completa</span>
-        <div class="results-actions">
-          <button class="btn-accent" id="runAnalyze">Executar analise</button>
-        </div>
-      </div>
+      <div class="analysis-grid" id="analysisGrid">
 
-      <div class="analysis-grid" id="analysisGrid" style="display:none">
-
-        <div class="analysis-card" id="cardEla" style="display:none">
-          <div class="card-head">ELA — Error Level Analysis</div>
+        <div class="analysis-card" id="cardAlerta" style="display:none">
+          <div class="card-head">Nível de Alerta Geral</div>
           <div class="card-body">
-            <img class="ela-img" id="elaImg" src="" alt="ELA"/>
+            <div class="alerta-display">
+              <div class="alerta-circulo" id="alertaCirculo">
+                <span id="alertaNivel"></span>
+              </div>
+              <div class="alerta-info">
+                <div class="alerta-score">Score de Suspeita: <strong id="alertaScore"></strong></div>
+                <ul class="alerta-regras" id="alertaRegras"></ul>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="analysis-card" id="cardScore" style="display:none">
-          <div class="card-head">Score de IA — Hive Moderation</div>
-          <div class="card-body">
-            <div class="score-row" id="scoreRow"></div>
+        <div id="skeletonGrid" style="display:none">
+          <div class="sub-grid">
+            <div class="analysis-card">
+              <div class="card-head">ELA — Error Level Analysis</div>
+              <div class="card-body"><div class="skeleton skeleton-img"></div></div>
+            </div>
+            <div class="analysis-card">
+              <div class="card-head">Gradiente de Luminância</div>
+              <div class="card-body"><div class="skeleton skeleton-img"></div></div>
+            </div>
+            <div class="analysis-card">
+              <div class="card-head">Mapa de Calor de Ruído</div>
+              <div class="card-body"><div class="skeleton skeleton-img"></div></div>
+            </div>
+            <div class="analysis-card">
+              <div class="card-head">Espectro FFT</div>
+              <div class="card-body"><div class="skeleton skeleton-img"></div></div>
+            </div>
+            <div class="analysis-card">
+              <div class="card-head">C2PA — Certificado de Origem</div>
+              <div class="card-body">
+                <div class="skeleton skeleton-line med"></div>
+                <div class="skeleton skeleton-line short"></div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="analysis-card" id="cardC2pa" style="display:none">
-          <div class="card-head">C2PA — Certificado de Origem</div>
-          <div class="card-body">
-            <div class="c2pa-status" id="c2paStatus"></div>
-            <div class="c2pa-details" id="c2paDetails"></div>
+        <div class="sub-grid" id="realCards" style="display:none">
+          <div class="analysis-card" id="cardEla" style="display:none">
+            <div class="card-head">ELA — Error Level Analysis</div>
+            <div class="card-body">
+              <img class="ela-img" id="elaImg" src="" alt="ELA"/>
+            </div>
+          </div>
+
+          <div class="analysis-card" id="cardGradient" style="display:none">
+            <div class="card-head">Gradiente de Luminância</div>
+            <div class="card-body">
+              <img class="ela-img" id="gradientImg" src="" alt="Luminance Gradient"/>
+            </div>
+          </div>
+
+          <div class="analysis-card" id="cardNoiseHeatmap" style="display:none">
+            <div class="card-head" id="noiseHeatmapHead">Mapa de Calor de Ruído</div>
+            <div class="card-body">
+              <img class="ela-img" id="noiseHeatmapImg" src="" alt="Noise Heatmap"/>
+            </div>
+          </div>
+
+          <div class="analysis-card" id="cardFft" style="display:none">
+            <div class="card-head" id="fftHead">Espectro FFT</div>
+            <div class="card-body">
+              <img class="ela-img" id="fftImg" src="" alt="FFT Spectrum"/>
+            </div>
+          </div>
+
+          <div class="analysis-card" id="cardC2pa" style="display:none">
+            <div class="card-head">
+              C2PA — Certificado de Origem
+              <span class="info-icon" title="Aviso: A maioria das imagens na internet (redes sociais, mensageiros) não possui certificado C2PA. O resultado 'ausente' é normal e esperado.">
+                <svg fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-144c-17.7 0-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32s-14.3 32-32 32z"/></svg>
+              </span>
+            </div>
+            <div class="card-body">
+              <div class="c2pa-status" id="c2paStatus"></div>
+              <div class="c2pa-details" id="c2paDetails"></div>
+            </div>
           </div>
         </div>
 
@@ -667,7 +782,7 @@
           <button class="btn-accent" id="runReverse">Buscar</button>
         </div>
         <div class="card-body">
-          <div id="reverseResults"></div>
+          <div id="reverseResults"><div class="empty">nenhuma busca realizada</div></div>
         </div>
       </div>
 
@@ -690,17 +805,22 @@
     <div class="modal-body">
       <p>
         <strong>FileSpector</strong> é uma ferramenta de análise forense para arquivos de mídia.
-        Ela permite extrair metadados ocultos, verificar a autenticidade com certificados C2PA,
-        detectar conteúdo gerado por IA e encontrar cópias online com busca reversa.
+        Extrai metadados ocultos, verifica autenticidade com certificados C2PA e detecta
+        conteúdo gerado por IA usando análise local de pixels — sem dependência de APIs externas.
       </p>
       <p>
-        Todas as análises são processadas de forma segura e os arquivos não são armazenados.
+        As análises incluem ELA, gradiente de luminância, mapa de calor de ruído, espectro FFT,
+        correlação de canais RGB e detecção de aberração cromática.
+      </p>
+        Nenhum arquivo é armazenado.
       </p>
     </div>
   </div>
 </div>
 
 <script>
+  const API_BASE = window.location.origin;
+
   const AI_KEYS = new Set([
     "credit","digitalsourcetype","digitalsourcefiletype",
     "claimgeneratorinfoname","claimgeneratorinfoversion",
@@ -736,7 +856,7 @@
   ]);
 
   function classify(key) {
-    const k = key.toLowerCase().replace(/[\s_\-]/g,"");
+    const k = key.toLowerCase().replace(/[\s_\-]/g, "");
     if (AI_KEYS.has(k)) return "ai";
     if (FILE_KEYS.has(k)) return "file";
     if (MEDIA_KEYS.has(k)) return "media";
@@ -745,8 +865,14 @@
 
   function fmtBytes(b) {
     if (b < 1024) return b + " B";
-    if (b < 1024*1024) return (b/1024).toFixed(1) + " KB";
-    return (b/(1024*1024)).toFixed(2) + " MB";
+    if (b < 1024 * 1024) return (b / 1024).toFixed(1) + " KB";
+    return (b / (1024 * 1024)).toFixed(2) + " MB";
+  }
+
+  function isImage(filename) {
+    const imgExts = new Set(["jpg","jpeg","png","webp","heic","heif","tiff","tif","gif","bmp"]);
+    const ext = filename.split(".").pop().toLowerCase();
+    return imgExts.has(ext);
   }
 
   let allMeta = {};
@@ -766,7 +892,7 @@
 
     if (searchQ) {
       const q = searchQ.toLowerCase();
-      entries = entries.filter(([k,v]) =>
+      entries = entries.filter(([k, v]) =>
         k.toLowerCase().includes(q) || String(v).toLowerCase().includes(q)
       );
     }
@@ -778,9 +904,9 @@
       return;
     }
 
-    entries.sort((a,b) => {
-      const order = {ai:0, file:1, media:2, other:3};
-      return (order[classify(a[0])]||3) - (order[classify(b[0])]||3);
+    entries.sort((a, b) => {
+      const order = { ai: 0, file: 1, media: 2, other: 3 };
+      return (order[classify(a[0])] || 3) - (order[classify(b[0])] || 3);
     });
 
     let lastCat = null;
@@ -802,70 +928,76 @@
   }
 
   function renderAnalysis(data) {
-    const grid = document.getElementById("analysisGrid");
-    grid.style.display = "flex";
+    document.getElementById("skeletonGrid").style.display = "none";
+    document.getElementById("realCards").style.display = "flex";
 
     if (data.ela) {
-      const card = document.getElementById("cardEla");
-      card.style.display = "block";
+      document.getElementById("cardEla").style.display = "block";
       document.getElementById("elaImg").src = "data:image/png;base64," + data.ela;
     }
 
-    if (data.score_ia && Object.keys(data.score_ia).length > 0) {
-      const card = document.getElementById("cardScore");
-      card.style.display = "block";
-      const row = document.getElementById("scoreRow");
-      row.innerHTML = "";
-      const sorted = Object.entries(data.score_ia).sort((a,b) => b[1] - a[1]);
-      sorted.forEach(([label, score]) => {
-        const pct = Math.round(score * 100);
-        const fillClass = pct >= 70 ? "high" : pct >= 40 ? "mid" : "";
-        const item = document.createElement("div");
-        item.className = "score-item";
-        item.innerHTML = `
-          <div class="score-label-row">
-            <span>${label}</span>
-            <span class="score-pct">${pct}%</span>
-          </div>
-          <div class="progress-track">
-            <div class="progress-fill ${fillClass}" style="width:${pct}%"></div>
-          </div>
-        `;
-        row.appendChild(item);
-      });
+    if (data.forense_avancada) {
+      const fa = data.forense_avancada;
+
+      if (fa.gradient_map_b64) {
+        document.getElementById("cardGradient").style.display = "block";
+        document.getElementById("gradientImg").src = "data:image/png;base64," + fa.gradient_map_b64;
+      }
+
+      if (fa.noise_heatmap_b64) {
+        document.getElementById("cardNoiseHeatmap").style.display = "block";
+        document.getElementById("noiseHeatmapImg").src = "data:image/png;base64," + fa.noise_heatmap_b64;
+        document.getElementById("noiseHeatmapHead").textContent =
+          "Mapa de Calor de Ruido | Variancia: " + fa.noise_variance;
+      }
+
+      if (fa.fft_map_b64) {
+        document.getElementById("cardFft").style.display = "block";
+        document.getElementById("fftImg").src = "data:image/png;base64," + fa.fft_map_b64;
+        const simetria = fa.fft_simetria != null ? " | Simetria: " + (fa.fft_simetria * 100).toFixed(1) + "%" : "";
+        document.getElementById("fftHead").textContent = "Espectro FFT" + simetria;
+      }
     }
 
     if (data.c2pa && typeof data.c2pa.presente !== "undefined") {
-      const card = document.getElementById("cardC2pa");
-      card.style.display = "block";
+      document.getElementById("cardC2pa").style.display = "block";
       const statusEl = document.getElementById("c2paStatus");
       const detailsEl = document.getElementById("c2paDetails");
-
       const { presente, valido, assinante, software, acao } = data.c2pa;
 
       let dotClass = "absent";
       let label = "Certificado ausente";
-      if (presente && valido) { dotClass = "ok"; label = "Certificado presente e valido"; }
-      else if (presente && !valido) { dotClass = "warn"; label = "Certificado presente mas invalido"; }
+      if (presente && valido)  { dotClass = "ok";   label = "Certificado presente e valido"; }
+      else if (presente)       { dotClass = "warn";  label = "Certificado presente mas invalido"; }
 
       statusEl.innerHTML = `<div class="c2pa-dot ${dotClass}"></div><span>${label}</span>`;
-
       detailsEl.innerHTML = "";
+
       if (presente) {
-        const fields = [
-          ["Assinante", assinante],
-          ["Software", software],
-          ["Acao", acao],
-        ];
-        fields.forEach(([k, v]) => {
+        [["Assinante", assinante], ["Software", software], ["Acao", acao]].forEach(([k, v]) => {
           if (v) {
-            const row = document.createElement("div");
-            row.className = "c2pa-row";
-            row.innerHTML = `<span class="c2pa-key">${k}</span><span class="c2pa-val">${v}</span>`;
-            detailsEl.appendChild(row);
+            const rowEl = document.createElement("div");
+            rowEl.className = "c2pa-row";
+            rowEl.innerHTML = `<span class="c2pa-key">${k}</span><span class="c2pa-val">${v}</span>`;
+            detailsEl.appendChild(rowEl);
           }
         });
       }
+    }
+
+    if (data.alerta) {
+      document.getElementById("cardAlerta").style.display = "block";
+      const circulo = document.getElementById("alertaCirculo");
+      const nivelMap = { "alto": "alto", "medio": "medio", "medio": "medio", "baixo": "baixo" };
+      const nivelCss = nivelMap[data.alerta.nivel.toLowerCase()] || "baixo";
+      circulo.className = "alerta-circulo " + nivelCss;
+      document.getElementById("alertaNivel").textContent = data.alerta.nivel;
+      document.getElementById("alertaScore").textContent = data.alerta.score;
+      const regrasList = document.getElementById("alertaRegras");
+      regrasList.innerHTML = "";
+      data.alerta.regras.forEach(regra => {
+        regrasList.innerHTML += `<li>${regra}</li>`;
+      });
     }
   }
 
@@ -891,6 +1023,29 @@
     container.appendChild(list);
   }
 
+  async function runDeepAnalysis() {
+    if (!currentFile || !isImage(currentFile.name)) return;
+
+    document.getElementById("skeletonGrid").style.display = "block";
+    document.getElementById("realCards").style.display = "none";
+    document.getElementById("cardAlerta").style.display = "none";
+
+    const form = new FormData();
+    form.append("file", currentFile);
+
+    try {
+      const res = await fetch(API_BASE + "/analyze/deep", { method: "POST", body: form });
+      const data = await res.json();
+      if (data.erro) {
+        document.getElementById("skeletonGrid").style.display = "none";
+        return;
+      }
+      renderAnalysis(data);
+    } catch (err) {
+      document.getElementById("skeletonGrid").style.display = "none";
+    }
+  }
+
   const dz = document.getElementById("dz");
   const fi = document.getElementById("fi");
 
@@ -913,16 +1068,26 @@
     document.getElementById("fbar").classList.add("on");
     document.getElementById("panel").classList.remove("on");
 
+    const previewEl = document.getElementById("filePreview");
+    const previewImg = document.getElementById("previewImg");
+    if (isImage(file.name)) {
+      const url = URL.createObjectURL(file);
+      previewImg.src = url;
+      previewEl.classList.add("on");
+    } else {
+      previewEl.classList.remove("on");
+      previewImg.src = "";
+    }
+
     const st = document.getElementById("status");
     st.className = "status on";
     st.textContent = "extraindo metadados...";
 
-    const base = document.getElementById("apiUrl").value.replace(/\/$/, "");
     const form = new FormData();
     form.append("file", file);
 
     try {
-      const res = await fetch(base + "/metadata", { method: "POST", body: form });
+      const res = await fetch(API_BASE + "/analyze/quick", { method: "POST", body: form });
       const data = await res.json();
 
       if (data.erro) {
@@ -931,53 +1096,35 @@
         return;
       }
 
-      allMeta = data;
       st.className = "status";
       document.getElementById("panel").classList.add("on");
 
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("on", b.dataset.tab === "meta"));
+      document.querySelectorAll(".tab-pane").forEach(p => p.classList.toggle("on", p.id === "tab-meta"));
+
+      allMeta = data.exif;
       activeFilter = "all";
       document.querySelectorAll(".fbtn").forEach(b => b.classList.toggle("on", b.dataset.f === "all"));
       document.getElementById("search").value = "";
       searchQ = "";
       render();
 
-      document.getElementById("analysisGrid").style.display = "none";
-      document.getElementById("reverseResults").innerHTML = "";
-      ["cardEla","cardScore","cardC2pa"].forEach(id => {
-        document.getElementById(id).style.display = "none";
-      });
+      document.getElementById("skeletonGrid").style.display = "none";
+      document.getElementById("realCards").style.display = "none";
+      document.getElementById("cardAlerta").style.display = "none";
+      document.getElementById("reverseResults").innerHTML = '<div class="empty">nenhuma busca realizada</div>';
+
+      if (isImage(file.name)) {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("on", b.dataset.tab === "analise"));
+        document.querySelectorAll(".tab-pane").forEach(p => p.classList.toggle("on", p.id === "tab-analise"));
+        runDeepAnalysis();
+      }
 
     } catch (err) {
       st.className = "status on err";
-      st.textContent = "nao foi possivel conectar em " + base + " — verifique se o servidor esta rodando";
+      st.textContent = "nao foi possivel conectar — verifique se o servidor esta rodando";
     }
   }
-
-  document.getElementById("runAnalyze").addEventListener("click", async () => {
-    if (!currentFile) return;
-    const btn = document.getElementById("runAnalyze");
-    btn.disabled = true;
-    btn.textContent = "analisando...";
-
-    const base = document.getElementById("apiUrl").value.replace(/\/$/, "");
-    const form = new FormData();
-    form.append("file", currentFile);
-
-    try {
-      const res = await fetch(base + "/analyze", { method: "POST", body: form });
-      const data = await res.json();
-      if (data.erro) {
-        alert("Erro: " + data.erro);
-        return;
-      }
-      renderAnalysis(data);
-    } catch (err) {
-      alert("Falha ao conectar em " + base);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Executar analise";
-    }
-  });
 
   document.getElementById("runReverse").addEventListener("click", async () => {
     if (!currentFile) return;
@@ -985,12 +1132,11 @@
     btn.disabled = true;
     btn.textContent = "buscando...";
 
-    const base = document.getElementById("apiUrl").value.replace(/\/$/, "");
     const form = new FormData();
     form.append("file", currentFile);
 
     try {
-      const res = await fetch(base + "/reverse", { method: "POST", body: form });
+      const res = await fetch(API_BASE + "/reverse", { method: "POST", body: form });
       const data = await res.json();
       if (data.erro) {
         document.getElementById("reverseResults").innerHTML = '<div class="empty">erro: ' + data.erro + '</div>';
@@ -1036,12 +1182,9 @@
   });
 
   const aboutModal = document.getElementById("aboutModal");
-  document.getElementById("aboutBtn").addEventListener("click", () => {
-    aboutModal.classList.add("on");
-  });
+  document.getElementById("aboutBtn").addEventListener("click", () => aboutModal.classList.add("on"));
   document.getElementById("closeModal").addEventListener("click", () => aboutModal.classList.remove("on"));
-  aboutModal.addEventListener("click", (e) => { if (e.target === aboutModal) aboutModal.classList.remove("on"); });
-
+  aboutModal.addEventListener("click", e => { if (e.target === aboutModal) aboutModal.classList.remove("on"); });
 </script>
 </body>
 </html>
