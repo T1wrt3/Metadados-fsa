@@ -1,0 +1,102 @@
+import numpy as np
+import cv2
+from PIL import Image, ImageChops, ImageEnhance, ExifTags
+import matplotlib.pyplot as plt
+import os
+from google.colab import files
+
+def detect_social_media_traces(image):
+    """Verifica indícios de que a imagem passou por redes sociais (ex: remoção de EXIF)"""
+    exif_data = image.getexif()
+    # Redes sociais costumam remover todos os metadados (EXIF) para economizar espaço e privacidade
+    if not exif_data or len(exif_data) == 0:
+        return True
+    return False
+
+def analyze_image_v4(image_path):
+    print(f"\nAnalisando: {image_path}...")
+    original = Image.open(image_path).convert('RGB')
+    
+    # 0. --- Detecção de Rede Social ---
+    is_social_media = detect_social_media_traces(original)
+    
+    # Ajuste dinâmico de qualidade do ELA: 
+    # Imagens de redes sociais geralmente já estão comprimidas em qualidade ~75
+    ela_quality = 75 if is_social_media else 90
+
+    # 1. --- ELA (Error Level Analysis) ---
+    temp_file = 'temp_resaved.jpg'
+    original.save(temp_file, 'JPEG', quality=ela_quality)
+    resaved = Image.open(temp_file)
+    ela_image = ImageChops.difference(original, resaved)
+    
+    # Métrica ELA com normalização baseada no tamanho da imagem
+    ela_stat = np.array(ela_image).mean()
+    
+    extrema = ela_image.getextrema()
+    max_diff = max([ex[1] for ex in extrema])
+    scale = 255.0 / (max_diff if max_diff > 0 else 1)
+    ela_display = ImageEnhance.Brightness(ela_image).enhance(scale)
+
+    # 2. --- SRM (Mapa de Ruído) ---
+    img_cv = cv2.imread(image_path)
+    img_gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+    
+    # Filtro SRM mais robusto
+    srm_kernel = np.array([[-1, 2, -1], [2, -4, 2], [-1, 2, -1]]) / 4.0
+    noise_residual = cv2.filter2D(img_gray, -1, srm_kernel)
+    noise_variance = np.var(noise_residual)
+
+    # 3. --- DFT (Espectro de Frequência) ---
+    dft = np.fft.fft2(img_gray)
+    dft_shift = np.fft.fftshift(dft)
+    magnitude_spectrum = 20 * np.log(np.abs(dft_shift) + 1e-8)
+
+    # --- Lógica do Veredito Dinâmico ---
+    veredito = "IMAGEM PROVAVELMENTE ORIGINAL"
+    avisos = []
+
+    # Limiares Dinâmicos dependendo da origem da imagem
+    ela_threshold = 1.0 if is_social_media else 0.7
+    noise_threshold = 70 if is_social_media else 50
+
+    if is_social_media:
+        avisos.append("ATENÇÃO: Metadados ausentes. Forte indício de tráfego via WhatsApp/Instagram. Análise ELA tem precisão reduzida.")
+        
+    if ela_stat > ela_threshold:
+        veredito = "SINAIS DE MANIPULAÇÃO"
+        avisos.append(f"Inconsistência de compressão (ELA: {ela_stat:.2f}).")
+    
+    if noise_variance > noise_threshold:
+        veredito = "SINAIS DE MANIPULAÇÃO"
+        avisos.append(f"Ruído estrutural atípico (Var: {noise_variance:.2f}).")
+
+    # --- Plotagem ---
+    fig, axs = plt.subplots(2, 2, figsize=(16, 12))
+    axs[0, 0].imshow(original); axs[0, 0].set_title("1. Original"); axs[0, 0].axis('off')
+    axs[0, 1].imshow(ela_display); axs[0, 1].set_title(f"2. ELA (Qualidade {ela_quality} | Média: {ela_stat:.2f})"); axs[0, 1].axis('off')
+    
+    noise_vis = cv2.applyColorMap(cv2.convertScaleAbs(noise_residual, alpha=10), cv2.COLORMAP_JET)
+    axs[1, 0].imshow(cv2.cvtColor(noise_vis, cv2.COLOR_BGR2RGB))
+    axs[1, 0].set_title(f"3. Mapa de Ruído (Var: {noise_variance:.2f})"); axs[1, 0].axis('off')
+    
+    axs[1, 1].imshow(magnitude_spectrum, cmap='magma'); axs[1, 1].set_title("4. Espectro (DFT)"); axs[1, 1].axis('off')
+
+    cor_titulo = 'red' if "MANIPULAÇÃO" in veredito else 'green'
+
+    plt.suptitle(f"VEREDITO: {veredito}\nAlertas: {' | '.join(avisos) if avisos else 'Nenhuma anomalia'}", fontsize=14, color=cor_titulo)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    
+    output_filename = f"analise_{os.path.basename(image_path)}"
+    plt.savefig(output_filename, dpi=200)
+    plt.show()
+    
+    if os.path.exists(temp_file): os.remove(temp_file)
+    print(f"--- RELATÓRIO: {os.path.basename(image_path)} ---")
+    print(f"Status: {veredito}")
+    for aviso in avisos: print(f"- {aviso}")
+
+# Execução no Colab
+uploaded = files.upload()
+for fn in uploaded.keys():
+    analyze_image_v4(fn)
