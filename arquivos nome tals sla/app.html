@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kingambit</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Space Grotesk', sans-serif;
+    background-color: #0a0a0f;
+    color: #e8e8ec;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.topo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 32px;
+    border-bottom: 1px solid #1e1e2e;
+    position: sticky;
+    top: 0;
+    background-color: #0a0a0f;
+    z-index: 100;
+}
+
+.topo-esquerda {
+    position: absolute;
+    left: 32px;
+}
+
+.topo-centro {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo-img {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 1px solid #1e1e2e;
+}
+
+.logo-texto {
+    font-size: 26px;
+    font-weight: 700;
+    color: #d4a520;
+    letter-spacing: 1.5px;
+}
+
+.menu-container {
+    position: relative;
+}
+
+.menu-hamburguer {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+.menu-hamburguer:hover {
+    background-color: #1e1e2e;
+}
+
+.menu-hamburguer span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background-color: #e8e8ec;
+    border-radius: 2px;
+}
+
+.menu-dropdown {
+    display: none;
+    position: absolute;
+    top: 48px;
+    left: 0;
+    background-color: #12121a;
+    border: 1px solid #1e1e2e;
+    border-radius: 10px;
+    min-width: 200px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.menu-dropdown.ativo {
+    display: block;
+}
+
+.menu-item {
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 14px;
+    color: #8888a0;
+    border-bottom: 1px solid #1e1e2e;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+}
+
+.menu-item:hover {
+    background-color: #1e1e2e;
+    color: #e8e8ec;
+}
+
+.conteudo {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px;
+}
+
+.upload-area {
+    border: 2px dashed #d4a520;
+    border-radius: 14px;
+    padding: 56px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background-color: #12121a;
+    margin-bottom: 32px;
+}
+
+.upload-area:hover {
+    border-color: #e8c840;
+    background-color: #16161f;
+}
+
+.upload-area.arrastando {
+    border-color: #e8c840;
+    background-color: #1a1a25;
+}
+
+.upload-area.com-arquivo {
+    border-color: #2ecc71;
+    border-style: solid;
+}
+
+.upload-texto {
+    font-size: 16px;
+    color: #8888a0;
+    margin-top: 12px;
+}
+
+.upload-nome {
+    font-size: 14px;
+    color: #2ecc71;
+    margin-top: 8px;
+    font-weight: 500;
+}
+
+.upload-input {
+    display: none;
+}
+
+.botoes-analise {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.botoes-analise .btn {
+    flex: 1;
+}
+
+.btn {
+    padding: 14px 24px;
+    border: 1px solid #c41a35;
+    background-color: transparent;
+    color: #c41a35;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 0.5px;
+}
+
+.btn:hover:not(:disabled) {
+    background-color: #c41a35;
+    color: #e8e8ec;
+}
+
+.btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.btn-largo {
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.btn-modelo {
+    border-color: #d4a520;
+    color: #d4a520;
+}
+
+.btn-modelo:hover:not(:disabled) {
+    background-color: #d4a520;
+    color: #0a0a0f;
+}
+
+.btn-reversa {
+    border-color: #8888a0;
+    color: #8888a0;
+}
+
+.btn-reversa:hover:not(:disabled) {
+    background-color: #8888a0;
+    color: #0a0a0f;
+}
+
+.resultado-secao {
+    margin-top: 24px;
+    background-color: #12121a;
+    border: 1px solid #1e1e2e;
+    border-radius: 12px;
+    overflow: hidden;
+    display: none;
+}
+
+.resultado-secao.visivel {
+    display: block;
+}
+
+.resultado-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #1e1e2e;
+    cursor: pointer;
+}
+
+.resultado-titulo {
+    font-size: 15px;
+    font-weight: 600;
+    color: #d4a520;
+}
+
+.resultado-fechar {
+    color: #8888a0;
+    font-size: 18px;
+    transition: color 0.3s;
+}
+
+.resultado-fechar:hover {
+    color: #e74c3c;
+}
+
+.resultado-corpo {
+    padding: 20px;
+}
+
+.abas-container {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #1e1e2e;
+    margin-bottom: 16px;
+}
+
+.aba-btn {
+    padding: 10px 18px;
+    background: none;
+    border: none;
+    color: #8888a0;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.aba-btn:hover {
+    color: #e8e8ec;
+}
+
+.aba-btn.ativa {
+    color: #d4a520;
+    border-bottom-color: #d4a520;
+}
+
+.aba-conteudo {
+    display: none;
+}
+
+.aba-conteudo.ativa {
+    display: block;
+}
+
+.meta-tabela {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.meta-tabela tr {
+    border-bottom: 1px solid #1e1e2e;
+}
+
+.meta-tabela tr:last-child {
+    border-bottom: none;
+}
+
+.meta-tabela td {
+    padding: 10px 12px;
+    font-size: 13px;
+}
+
+.meta-tabela td:first-child {
+    color: #8888a0;
+    width: 40%;
+    font-weight: 500;
+}
+
+.meta-tabela td:last-child {
+    color: #e8e8ec;
+}
+
+.indicio-card {
+    background-color: rgba(196, 26, 53, 0.1);
+    border: 1px solid rgba(196, 26, 53, 0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+}
+
+.indicio-campo {
+    font-size: 13px;
+    font-weight: 600;
+    color: #c41a35;
+}
+
+.indicio-valor {
+    font-size: 12px;
+    color: #e8e8ec;
+    margin-top: 2px;
+}
+
+.indicio-motivo {
+    font-size: 12px;
+    color: #8888a0;
+    margin-top: 4px;
+}
+
+.meta-vazio {
+    text-align: center;
+    padding: 24px;
+    color: #8888a0;
+    font-size: 13px;
+}
+
+.imagens-forense {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.imagem-card {
+    background-color: #0a0a0f;
+    border: 1px solid #1e1e2e;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.imagem-card img {
+    width: 100%;
+    display: block;
+}
+
+.imagem-card-titulo {
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #8888a0;
+    font-weight: 500;
+    text-align: center;
+}
+
+.valores-forense {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.valor-card {
+    background-color: #0a0a0f;
+    border: 1px solid #1e1e2e;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+}
+
+.valor-numero {
+    font-size: 22px;
+    font-weight: 700;
+    color: #e8e8ec;
+}
+
+.valor-label {
+    font-size: 11px;
+    color: #8888a0;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.interpretacao-container {
+    margin-top: 20px;
+}
+
+.interpretacao-resumo {
+    padding: 16px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.interpretacao-resumo.resumo-alto {
+    background-color: rgba(196, 26, 53, 0.1);
+    border: 1px solid rgba(196, 26, 53, 0.3);
+    color: #c41a35;
+}
+
+.interpretacao-resumo.resumo-medio {
+    background-color: rgba(212, 165, 32, 0.1);
+    border: 1px solid rgba(212, 165, 32, 0.3);
+    color: #d4a520;
+}
+
+.interpretacao-resumo.resumo-baixo {
+    background-color: rgba(46, 204, 113, 0.1);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    color: #2ecc71;
+}
+
+.conclusao-card {
+    background-color: #0a0a0f;
+    border: 1px solid #1e1e2e;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+}
+
+.conclusao-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.conclusao-area {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.conclusao-severidade {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.sev-alta {
+    background-color: rgba(196, 26, 53, 0.2);
+    color: #c41a35;
+}
+
+.sev-media {
+    background-color: rgba(212, 165, 32, 0.2);
+    color: #d4a520;
+}
+
+.sev-baixa {
+    background-color: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+}
+
+.conclusao-indicador {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e8e8ec;
+    margin-top: 6px;
+}
+
+.conclusao-interpretacao {
+    font-size: 12px;
+    color: #8888a0;
+    margin-top: 4px;
+    line-height: 1.5;
+}
+
+.conclusao-valor {
+    font-size: 11px;
+    color: #555;
+    margin-top: 4px;
+}
+
+.reversa-lista {
+    list-style: none;
+}
+
+.reversa-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid #1e1e2e;
+    transition: background-color 0.3s;
+}
+
+.reversa-item:last-child {
+    border-bottom: none;
+}
+
+.reversa-item:hover {
+    background-color: #1a1a25;
+}
+
+.reversa-titulo {
+    font-size: 14px;
+    color: #e8e8ec;
+    font-weight: 500;
+}
+
+.reversa-url {
+    font-size: 12px;
+    color: #c41a35;
+    text-decoration: none;
+    margin-top: 4px;
+    display: block;
+    word-break: break-all;
+}
+
+.reversa-url:hover {
+    text-decoration: underline;
+}
+
+.reversa-fonte {
+    font-size: 11px;
+    color: #8888a0;
+    margin-top: 2px;
+}
+
+.score-container {
+    text-align: center;
+    padding: 32px;
+}
+
+.score-valor {
+    font-size: 64px;
+    font-weight: 700;
+}
+
+.score-label {
+    font-size: 14px;
+    color: #8888a0;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.score-nivel {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.nivel-baixo {
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #2ecc71;
+    border: 1px solid #2ecc71;
+}
+
+.nivel-medio {
+    background-color: rgba(212, 165, 32, 0.15);
+    color: #d4a520;
+    border: 1px solid #d4a520;
+}
+
+.nivel-alto {
+    background-color: rgba(196, 26, 53, 0.15);
+    color: #c41a35;
+    border: 1px solid #c41a35;
+}
+
+.modal-fundo {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    z-index: 200;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 48px 24px;
+    overflow-y: auto;
+}
+
+.modal-fundo.ativo {
+    display: flex;
+}
+
+.modal-conteudo {
+    background-color: #12121a;
+    border: 1px solid #1e1e2e;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #1e1e2e;
+    position: sticky;
+    top: 0;
+    background-color: #12121a;
+    border-radius: 14px 14px 0 0;
+}
+
+.modal-titulo {
+    font-size: 18px;
+    font-weight: 700;
+    color: #d4a520;
+}
+
+.modal-fechar {
+    font-size: 22px;
+    color: #8888a0;
+    cursor: pointer;
+    transition: color 0.3s;
+    background: none;
+    border: none;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
+.modal-fechar:hover {
+    color: #e74c3c;
+}
+
+.busca-reviews {
+    width: 100%;
+    padding: 14px 20px;
+    background-color: #0a0a0f;
+    border: none;
+    border-bottom: 1px solid #1e1e2e;
+    color: #e8e8ec;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    outline: none;
+}
+
+.busca-reviews::placeholder {
+    color: #8888a0;
+}
+
+.review-card {
+    padding: 16px 24px;
+    border-bottom: 1px solid #1e1e2e;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.review-card:last-child {
+    border-bottom: none;
+}
+
+.review-card:hover {
+    background-color: #1a1a25;
+}
+
+.review-nome {
+    font-size: 15px;
+    font-weight: 600;
+    color: #e8e8ec;
+}
+
+.review-preview {
+    font-size: 12px;
+    color: #8888a0;
+    margin-top: 4px;
+}
+
+.review-detalhes {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #1e1e2e;
+}
+
+.review-detalhes.ativo {
+    display: block;
+}
+
+.review-campo {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+}
+
+.review-campo-nome {
+    color: #8888a0;
+}
+
+.review-campo-valor {
+    color: #e8e8ec;
+    text-align: right;
+    max-width: 60%;
+}
+
+.carregando {
+    display: none;
+    text-align: center;
+    padding: 24px;
+}
+
+.carregando.ativo {
+    display: block;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #1e1e2e;
+    border-top-color: #c41a35;
+    border-radius: 50%;
+    animation: girar 0.8s linear infinite;
+    margin: 0 auto 12px;
+}
+
+@keyframes girar {
+    to { transform: rotate(360deg); }
+}
+
+.carregando-texto {
+    font-size: 13px;
+    color: #8888a0;
+}
+
+.erro-msg {
+    background-color: rgba(231, 76, 60, 0.1);
+    border: 1px solid #e74c3c;
+    border-radius: 10px;
+    padding: 14px 20px;
+    color: #e74c3c;
+    font-size: 13px;
+    margin-top: 16px;
+    display: none;
+}
+
+.erro-msg.visivel {
+    display: block;
+}
+
+.sem-resultados {
+    text-align: center;
+    padding: 32px;
+    color: #8888a0;
+    font-size: 14px;
+}
+
+@media (max-width: 600px) {
+    .botoes-analise {
+        flex-direction: column;
+    }
+    .imagens-forense {
+        grid-template-columns: 1fr;
+    }
+    .valores-forense {
+        grid-template-columns: 1fr 1fr;
+    }
+    .topo {
+        padding: 12px 16px;
+    }
+    .conteudo {
+        padding: 24px 16px;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="topo">
+    <div class="topo-esquerda">
+        <div class="menu-container">
+            <div class="menu-hamburguer" id="menuHamburguer">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <div class="menu-dropdown" id="menuDropdown">
+                <div class="menu-item" id="menuReview">Deixar review</div>
+                <div class="menu-item" id="menuVerReviews">Ver reviews</div>
+                <div class="menu-item" id="menuSobre">Sobre</div>
+            </div>
+        </div>
+    </div>
+    <div class="topo-centro">
+        <img src="/assets/kingambit.png" alt="Kingambit" class="logo-img">
+        <span class="logo-texto">Kingambit</span>
+    </div>
+</div>
+
+<div class="conteudo">
+    <div class="upload-area" id="uploadArea">
+        <div class="upload-texto">Arraste ou clique para adicionar o arquivo</div>
+        <div class="upload-nome" id="uploadNome"></div>
+        <input type="file" class="upload-input" id="uploadInput" accept="image/*">
+    </div>
+
+    <div class="botoes-analise">
+        <button class="btn" id="btnMetadados" disabled>Analise Metadados</button>
+        <button class="btn" id="btnEla" disabled>Analise ELA</button>
+    </div>
+
+    <button class="btn btn-largo" id="btnForense" disabled>Analise Forense Completa</button>
+    <button class="btn btn-largo btn-reversa" id="btnReversa" disabled>Busca Reversa</button>
+    <button class="btn btn-largo btn-modelo" id="btnModelo" disabled>Classificar com Modelo</button>
+
+    <div class="erro-msg" id="erroGeral"></div>
+
+    <div class="carregando" id="carregando">
+        <div class="spinner"></div>
+        <div class="carregando-texto">Processando...</div>
+    </div>
+
+    <div class="resultado-secao" id="secaoMetadados">
+        <div class="resultado-cabecalho" onclick="fecharSecao('secaoMetadados')">
+            <span class="resultado-titulo">Metadados</span>
+            <span class="resultado-fechar">&#10005;</span>
+        </div>
+        <div class="resultado-corpo" id="corpoMetadados"></div>
+    </div>
+
+    <div class="resultado-secao" id="secaoEla">
+        <div class="resultado-cabecalho" onclick="fecharSecao('secaoEla')">
+            <span class="resultado-titulo">Analise ELA</span>
+            <span class="resultado-fechar">&#10005;</span>
+        </div>
+        <div class="resultado-corpo" id="corpoEla"></div>
+    </div>
+
+    <div class="resultado-secao" id="secaoForense">
+        <div class="resultado-cabecalho" onclick="fecharSecao('secaoForense')">
+            <span class="resultado-titulo">Analise Forense</span>
+            <span class="resultado-fechar">&#10005;</span>
+        </div>
+        <div class="resultado-corpo" id="corpoForense"></div>
+    </div>
+
+    <div class="resultado-secao" id="secaoReversa">
+        <div class="resultado-cabecalho" onclick="fecharSecao('secaoReversa')">
+            <span class="resultado-titulo">Busca Reversa</span>
+            <span class="resultado-fechar">&#10005;</span>
+        </div>
+        <div class="resultado-corpo" id="corpoReversa"></div>
+    </div>
+
+    <div class="resultado-secao" id="secaoModelo">
+        <div class="resultado-cabecalho" onclick="fecharSecao('secaoModelo')">
+            <span class="resultado-titulo">Classificacao do Modelo</span>
+            <span class="resultado-fechar">&#10005;</span>
+        </div>
+        <div class="resultado-corpo" id="corpoModelo"></div>
+    </div>
+</div>
+
+<div class="modal-fundo" id="modalReviews">
+    <div class="modal-conteudo">
+        <div class="modal-topo">
+            <span class="modal-titulo">Reviews</span>
+            <button class="modal-fechar" id="fecharModal">&#10005;</button>
+        </div>
+        <input type="text" class="busca-reviews" id="buscaReviews" placeholder="Buscar por nome...">
+        <div id="listaReviews"></div>
+    </div>
+</div>
+
+<script>
+var arquivoAtual = null;
+
+var uploadArea = document.getElementById('uploadArea');
+var uploadInput = document.getElementById('uploadInput');
+var uploadNome = document.getElementById('uploadNome');
+var btnMetadados = document.getElementById('btnMetadados');
+var btnEla = document.getElementById('btnEla');
+var btnForense = document.getElementById('btnForense');
+var btnReversa = document.getElementById('btnReversa');
+var btnModelo = document.getElementById('btnModelo');
+var carregando = document.getElementById('carregando');
+var erroGeral = document.getElementById('erroGeral');
+var menuHamburguer = document.getElementById('menuHamburguer');
+var menuDropdown = document.getElementById('menuDropdown');
+
+uploadArea.addEventListener('click', function() { uploadInput.click(); });
+
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadArea.classList.add('arrastando');
+});
+
+uploadArea.addEventListener('dragleave', function() {
+    uploadArea.classList.remove('arrastando');
+});
+
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('arrastando');
+    if (e.dataTransfer.files.length > 0) selecionarArquivo(e.dataTransfer.files[0]);
+});
+
+uploadInput.addEventListener('change', function() {
+    if (uploadInput.files.length > 0) selecionarArquivo(uploadInput.files[0]);
+});
+
+function selecionarArquivo(arquivo) {
+    arquivoAtual = arquivo;
+    uploadNome.textContent = arquivo.name;
+    uploadArea.classList.add('com-arquivo');
+    btnMetadados.disabled = false;
+    btnEla.disabled = false;
+    btnForense.disabled = false;
+    btnReversa.disabled = false;
+    btnModelo.disabled = false;
+    esconderErro();
+    fecharTodasSecoes();
+}
+
+function mostrarCarregando() { carregando.classList.add('ativo'); }
+function esconderCarregando() { carregando.classList.remove('ativo'); }
+function mostrarErro(msg) { erroGeral.textContent = msg; erroGeral.classList.add('visivel'); }
+function esconderErro() { erroGeral.classList.remove('visivel'); }
+function fecharSecao(id) { document.getElementById(id).classList.remove('visivel'); }
+function fecharTodasSecoes() {
+    var secoes = document.querySelectorAll('.resultado-secao');
+    for (var i = 0; i < secoes.length; i++) secoes[i].classList.remove('visivel');
+}
+function criarFormData() {
+    var fd = new FormData();
+    fd.append('file', arquivoAtual);
+    return fd;
+}
+
+function escapeHtml(texto) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(texto));
+    return div.innerHTML;
+}
+
+function criarTabela(dados) {
+    if (!dados || Object.keys(dados).length === 0) {
+        return '<div class="meta-vazio">Nenhum dado encontrado nesta categoria</div>';
+    }
+    var html = '<table class="meta-tabela">';
+    var chaves = Object.keys(dados);
+    for (var i = 0; i < chaves.length; i++) {
+        html += '<tr><td>' + escapeHtml(chaves[i]) + '</td><td>' + escapeHtml(String(dados[chaves[i]])) + '</td></tr>';
+    }
+    html += '</table>';
+    return html;
+}
+
+function trocarAba(grupo, indice) {
+    var abas = document.querySelectorAll('.aba-btn[data-grupo="' + grupo + '"]');
+    var conteudos = document.querySelectorAll('.aba-conteudo[data-grupo="' + grupo + '"]');
+    for (var i = 0; i < abas.length; i++) {
+        abas[i].classList.remove('ativa');
+        conteudos[i].classList.remove('ativa');
+    }
+    abas[indice].classList.add('ativa');
+    conteudos[indice].classList.add('ativa');
+}
+
+menuHamburguer.addEventListener('click', function(e) {
+    e.stopPropagation();
+    menuDropdown.classList.toggle('ativo');
+});
+
+document.addEventListener('click', function() {
+    menuDropdown.classList.remove('ativo');
+});
+
+document.getElementById('menuReview').addEventListener('click', function() {
+    fetch('/formulario')
+        .then(function(r) { return r.json(); })
+        .then(function(d) { window.open(d.link, '_blank'); });
+});
+
+document.getElementById('menuSobre').addEventListener('click', function() {
+    window.open('/assets/sobre.pdf', '_blank');
+});
+
+document.getElementById('menuVerReviews').addEventListener('click', function() {
+    abrirModalReviews();
+});
+
+document.getElementById('fecharModal').addEventListener('click', function() {
+    document.getElementById('modalReviews').classList.remove('ativo');
+});
+
+document.getElementById('modalReviews').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('ativo');
+});
+
+var dadosReviews = [];
+
+function abrirModalReviews() {
+    var modal = document.getElementById('modalReviews');
+    var lista = document.getElementById('listaReviews');
+    modal.classList.add('ativo');
+    lista.innerHTML = '<div class="carregando ativo"><div class="spinner"></div><div class="carregando-texto">Carregando reviews...</div></div>';
+
+    fetch('/respostas')
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.erro) {
+                lista.innerHTML = '<div class="sem-resultados">' + d.erro + '</div>';
+                return;
+            }
+            dadosReviews = d.dados;
+            renderizarReviews(dadosReviews, d.colunas);
+        })
+        .catch(function() {
+            lista.innerHTML = '<div class="sem-resultados">Erro ao carregar reviews</div>';
+        });
+}
+
+function renderizarReviews(dados, colunas) {
+    var lista = document.getElementById('listaReviews');
+    if (dados.length === 0) {
+        lista.innerHTML = '<div class="sem-resultados">Nenhuma review encontrada</div>';
+        return;
+    }
+    dados.sort(function(a, b) {
+        var nomeA = (a[colunas[0]] || '').toString().toLowerCase();
+        var nomeB = (b[colunas[0]] || '').toString().toLowerCase();
+        return nomeA.localeCompare(nomeB);
+    });
+    var html = '';
+    for (var i = 0; i < dados.length; i++) {
+        var item = dados[i];
+        var nome = item[colunas[0]] || 'Sem nome';
+        var preview = colunas.length > 1 ? (item[colunas[1]] || '') : '';
+        html += '<div class="review-card" onclick="toggleReview(' + i + ')">';
+        html += '<div class="review-nome">' + escapeHtml(nome.toString()) + '</div>';
+        html += '<div class="review-preview">' + escapeHtml(preview.toString().substring(0, 80)) + '</div>';
+        html += '<div class="review-detalhes" id="review-' + i + '">';
+        for (var j = 0; j < colunas.length; j++) {
+            var valor = item[colunas[j]] !== null && item[colunas[j]] !== undefined ? item[colunas[j]] : '';
+            html += '<div class="review-campo">';
+            html += '<span class="review-campo-nome">' + escapeHtml(colunas[j]) + '</span>';
+            html += '<span class="review-campo-valor">' + escapeHtml(valor.toString()) + '</span>';
+            html += '</div>';
+        }
+        html += '</div></div>';
+    }
+    lista.innerHTML = html;
+}
+
+function toggleReview(idx) {
+    document.getElementById('review-' + idx).classList.toggle('ativo');
+}
+
+document.getElementById('buscaReviews').addEventListener('input', function() {
+    var termo = this.value.toLowerCase();
+    var cards = document.querySelectorAll('.review-card');
+    for (var i = 0; i < cards.length; i++) {
+        var nome = cards[i].querySelector('.review-nome').textContent.toLowerCase();
+        cards[i].style.display = nome.indexOf(termo) !== -1 ? 'block' : 'none';
+    }
+});
+
+btnMetadados.addEventListener('click', function() {
+    if (!arquivoAtual) return;
+    esconderErro();
+    mostrarCarregando();
+
+    fetch('/analyze/quick', { method: 'POST', body: criarFormData() })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            esconderCarregando();
+            if (d.erro) { mostrarErro(d.erro); return; }
+
+            var cat = d.categorias;
+            var corpo = document.getElementById('corpoMetadados');
+
+            var html = '<div class="abas-container">';
+            html += '<button class="aba-btn ativa" data-grupo="meta" onclick="trocarAba(\'meta\', 0)">IA</button>';
+            html += '<button class="aba-btn" data-grupo="meta" onclick="trocarAba(\'meta\', 1)">Camera</button>';
+            html += '<button class="aba-btn" data-grupo="meta" onclick="trocarAba(\'meta\', 2)">Arquivo</button>';
+            html += '<button class="aba-btn" data-grupo="meta" onclick="trocarAba(\'meta\', 3)">Todos</button>';
+            html += '</div>';
+
+            html += '<div class="aba-conteudo ativa" data-grupo="meta">';
+            if (cat.indicios_ia && cat.indicios_ia.length > 0) {
+                for (var i = 0; i < cat.indicios_ia.length; i++) {
+                    var ind = cat.indicios_ia[i];
+                    html += '<div class="indicio-card">';
+                    html += '<div class="indicio-campo">' + escapeHtml(ind.campo) + '</div>';
+                    html += '<div class="indicio-valor">' + escapeHtml(String(ind.valor)) + '</div>';
+                    html += '<div class="indicio-motivo">' + escapeHtml(ind.motivo) + '</div>';
+                    html += '</div>';
+                }
+            }
+            if (cat.ia && Object.keys(cat.ia).length > 0) {
+                html += criarTabela(cat.ia);
+            }
+            if ((!cat.indicios_ia || cat.indicios_ia.length === 0) && (!cat.ia || Object.keys(cat.ia).length === 0)) {
+                html += '<div class="meta-vazio">Nenhum metadado relacionado a IA encontrado. A imagem pode ser autentica ou os metadados foram removidos.</div>';
+            }
+            html += '</div>';
+
+            html += '<div class="aba-conteudo" data-grupo="meta">';
+            if (cat.camera && Object.keys(cat.camera).length > 0) {
+                html += criarTabela(cat.camera);
+            } else {
+                html += '<div class="meta-vazio">Nenhum metadado de camera encontrado</div>';
+            }
+            html += '</div>';
+
+            html += '<div class="aba-conteudo" data-grupo="meta">';
+            html += criarTabela(cat.arquivo);
+            html += '</div>';
+
+            html += '<div class="aba-conteudo" data-grupo="meta">';
+            html += criarTabela(d.exif);
+            html += '</div>';
+
+            corpo.innerHTML = html;
+            document.getElementById('secaoMetadados').classList.add('visivel');
+        })
+        .catch(function() {
+            esconderCarregando();
+            mostrarErro('Erro ao analisar metadados');
+        });
+});
+
+btnEla.addEventListener('click', function() {
+    if (!arquivoAtual) return;
+    esconderErro();
+    mostrarCarregando();
+
+    fetch('/analyze/deep', { method: 'POST', body: criarFormData() })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            esconderCarregando();
+            if (d.erro) { mostrarErro(d.erro); return; }
+
+            var corpo = document.getElementById('corpoEla');
+            var urlOriginal = URL.createObjectURL(arquivoAtual);
+            var html = '<div class="imagens-forense">';
+            html += '<div class="imagem-card"><img src="' + urlOriginal + '"><div class="imagem-card-titulo">Original</div></div>';
+            html += '<div class="imagem-card"><img src="data:image/png;base64,' + d.ela + '"><div class="imagem-card-titulo">ELA</div></div>';
+            html += '</div>';
+
+            if (d.forense && d.forense.interpretacao) {
+                var interp = d.forense.interpretacao;
+                var elaConc = [];
+                for (var i = 0; i < interp.conclusoes.length; i++) {
+                    if (interp.conclusoes[i].area === 'ELA') elaConc.push(interp.conclusoes[i]);
+                }
+                if (elaConc.length > 0) {
+                    html += '<div class="interpretacao-container">';
+                    for (var j = 0; j < elaConc.length; j++) {
+                        var c = elaConc[j];
+                        html += '<div class="conclusao-card">';
+                        html += '<div class="conclusao-topo">';
+                        html += '<span class="conclusao-area">' + escapeHtml(c.area) + '</span>';
+                        html += '<span class="conclusao-severidade sev-' + c.severidade + '">' + c.severidade + '</span>';
+                        html += '</div>';
+                        html += '<div class="conclusao-indicador">' + escapeHtml(c.indicador) + '</div>';
+                        html += '<div class="conclusao-interpretacao">' + escapeHtml(c.interpretacao) + '</div>';
+                        html += '<div class="conclusao-valor">Valor: ' + c.valor + '</div>';
+                        html += '</div>';
+                    }
+                    html += '</div>';
+                }
+            }
+
+            corpo.innerHTML = html;
+            document.getElementById('secaoEla').classList.add('visivel');
+        })
+        .catch(function() {
+            esconderCarregando();
+            mostrarErro('Erro na analise ELA');
+        });
+});
+
+btnForense.addEventListener('click', function() {
+    if (!arquivoAtual) return;
+    esconderErro();
+    mostrarCarregando();
+
+    fetch('/analyze/deep', { method: 'POST', body: criarFormData() })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            esconderCarregando();
+            if (d.erro) { mostrarErro(d.erro); return; }
+
+            var corpo = document.getElementById('corpoForense');
+            var f = d.forense;
+
+            var html = '<div class="imagens-forense">';
+            html += '<div class="imagem-card"><img src="data:image/png;base64,' + f.mapa_gradiente_b64 + '"><div class="imagem-card-titulo">Mapa de Gradiente</div></div>';
+            html += '<div class="imagem-card"><img src="data:image/png;base64,' + f.mapa_ruido_b64 + '"><div class="imagem-card-titulo">Mapa de Ruido</div></div>';
+            html += '<div class="imagem-card"><img src="data:image/png;base64,' + f.fft_mapa_b64 + '"><div class="imagem-card-titulo">Analise FFT</div></div>';
+            html += '<div class="imagem-card"><img src="data:image/png;base64,' + d.ela + '"><div class="imagem-card-titulo">ELA</div></div>';
+            html += '</div>';
+
+            html += '<div class="valores-forense">';
+            html += '<div class="valor-card"><div class="valor-numero">' + f.variancia_ruido + '</div><div class="valor-label">Variancia Ruido</div></div>';
+            html += '<div class="valor-card"><div class="valor-numero">' + f.fft_simetria + '</div><div class="valor-label">Simetria FFT</div></div>';
+            html += '<div class="valor-card"><div class="valor-numero">' + f.aberracao_cromatica + '</div><div class="valor-label">Aberracao Cromatica</div></div>';
+            html += '<div class="valor-card"><div class="valor-numero">' + f.correlacao_rgb.rg + '</div><div class="valor-label">Correlacao R-G</div></div>';
+            html += '<div class="valor-card"><div class="valor-numero">' + f.correlacao_rgb.rb + '</div><div class="valor-label">Correlacao R-B</div></div>';
+            html += '<div class="valor-card"><div class="valor-numero">' + f.correlacao_rgb.gb + '</div><div class="valor-label">Correlacao G-B</div></div>';
+            html += '<div class="valor-card"><div class="valor-numero">' + f.gradiente_media + '</div><div class="valor-label">Gradiente Media</div></div>';
+            html += '<div class="valor-card"><div class="valor-numero">' + f.gradiente_desvio + '</div><div class="valor-label">Gradiente Desvio</div></div>';
+            html += '</div>';
+
+            if (f.interpretacao) {
+                var interp = f.interpretacao;
+                var classeResumo = 'resumo-baixo';
+                if (interp.contagem.alta >= 3) classeResumo = 'resumo-alto';
+                else if (interp.contagem.alta >= 1) classeResumo = 'resumo-medio';
+                else if (interp.contagem.media >= 2) classeResumo = 'resumo-medio';
+
+                html += '<div class="interpretacao-container">';
+                html += '<div class="interpretacao-resumo ' + classeResumo + '">' + escapeHtml(interp.resumo) + '</div>';
+
+                for (var i = 0; i < interp.conclusoes.length; i++) {
+                    var c = interp.conclusoes[i];
+                    html += '<div class="conclusao-card">';
+                    html += '<div class="conclusao-topo">';
+                    html += '<span class="conclusao-area">' + escapeHtml(c.area) + '</span>';
+                    html += '<span class="conclusao-severidade sev-' + c.severidade + '">' + c.severidade + '</span>';
+                    html += '</div>';
+                    html += '<div class="conclusao-indicador">' + escapeHtml(c.indicador) + '</div>';
+                    html += '<div class="conclusao-interpretacao">' + escapeHtml(c.interpretacao) + '</div>';
+                    html += '<div class="conclusao-valor">Valor: ' + c.valor + '</div>';
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+
+            corpo.innerHTML = html;
+            document.getElementById('secaoForense').classList.add('visivel');
+        })
+        .catch(function() {
+            esconderCarregando();
+            mostrarErro('Erro na analise forense');
+        });
+});
+
+btnReversa.addEventListener('click', function() {
+    if (!arquivoAtual) return;
+    esconderErro();
+    mostrarCarregando();
+
+    fetch('/reverse', { method: 'POST', body: criarFormData() })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            esconderCarregando();
+            if (d.erro) { mostrarErro(d.erro); return; }
+
+            var corpo = document.getElementById('corpoReversa');
+            var resultados = d.resultados;
+
+            if (resultados.length === 0) {
+                corpo.innerHTML = '<div class="sem-resultados">Nenhum resultado encontrado</div>';
+            } else {
+                var html = '<ul class="reversa-lista">';
+                for (var i = 0; i < resultados.length; i++) {
+                    var item = resultados[i];
+                    html += '<li class="reversa-item">';
+                    html += '<div class="reversa-titulo">' + escapeHtml(item.titulo || 'Sem titulo') + '</div>';
+                    html += '<a class="reversa-url" href="' + escapeHtml(item.url || '#') + '" target="_blank">' + escapeHtml(item.url || '') + '</a>';
+                    html += '<div class="reversa-fonte">' + escapeHtml(item.fonte || '') + '</div>';
+                    html += '</li>';
+                }
+                html += '</ul>';
+                corpo.innerHTML = html;
+            }
+            document.getElementById('secaoReversa').classList.add('visivel');
+        })
+        .catch(function() {
+            esconderCarregando();
+            mostrarErro('Erro na busca reversa');
+        });
+});
+
+btnModelo.addEventListener('click', function() {
+    if (!arquivoAtual) return;
+    esconderErro();
+    mostrarCarregando();
+
+    fetch('/classify', { method: 'POST', body: criarFormData() })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            esconderCarregando();
+            if (d.erro) { mostrarErro(d.erro); return; }
+
+            var corpo = document.getElementById('corpoModelo');
+            var corScore = '#2ecc71';
+            var classeNivel = 'nivel-baixo';
+
+            if (d.nivel === 'Medio') {
+                corScore = '#d4a520';
+                classeNivel = 'nivel-medio';
+            } else if (d.nivel === 'Alto') {
+                corScore = '#c41a35';
+                classeNivel = 'nivel-alto';
+            }
+
+            var html = '<div class="score-container">';
+            html += '<div class="score-valor" style="color:' + corScore + '">' + d.score + '</div>';
+            html += '<div class="score-label">Probabilidade de manipulacao</div>';
+            html += '<div class="score-nivel ' + classeNivel + '">' + d.nivel + '</div>';
+            html += '</div>';
+
+            corpo.innerHTML = html;
+            document.getElementById('secaoModelo').classList.add('visivel');
+        })
+        .catch(function() {
+            esconderCarregando();
+            mostrarErro('Erro ao classificar com modelo');
+        });
+});
+</script>
+</body>
+</html>
