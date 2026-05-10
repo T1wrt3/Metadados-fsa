@@ -1,8 +1,0 @@
-Flask
-pyexiftool
-numpy
-requests
-Pillow
-opencv-python
-python-dotenv
-certifi
